@@ -20,9 +20,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
-  const { admin, logoutMutation } = useAuth();
+  const { logoutMutation } = useAuth();
   const { toast } = useToast();
-  
+
   // Form for adding new participants
   const form = useForm({
     resolver: zodResolver(insertParticipantSchema),
