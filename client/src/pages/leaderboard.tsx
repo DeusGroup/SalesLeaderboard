@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Trophy } from "lucide-react";
+import { Trophy, DollarSign, Briefcase, Phone, Target } from "lucide-react";
 import type { Participant } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -78,39 +78,47 @@ export default function LeaderboardPage() {
           </div>
 
           {/* Points Legend */}
-          <Card className="h-fit">
-            <CardHeader>
-              <CardTitle className="text-lg">Points Calculation</CardTitle>
+          <Card className="h-fit bg-gradient-to-br from-white to-gray-50 border-t-4 border-t-primary">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl font-bold flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                Points System
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h3 className="font-medium">Board Revenue</h3>
-                  <p className="text-sm text-muted-foreground">
+              <div className="space-y-6">
+                <div className="relative pl-8">
+                  <DollarSign className="absolute left-0 top-1 h-5 w-5 text-green-600" />
+                  <h3 className="font-semibold text-green-700">Board Revenue</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Direct dollar value (1:1)
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="font-medium">MSP Revenue</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="relative pl-8">
+                  <Briefcase className="absolute left-0 top-1 h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold text-blue-700">MSP Revenue</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Direct dollar value (1:1)
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="font-medium">Voice Seats</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="relative pl-8">
+                  <Phone className="absolute left-0 top-1 h-5 w-5 text-purple-600" />
+                  <h3 className="font-semibold text-purple-700">Voice Seats</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     10 points per seat
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="font-medium">Total Deals</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="relative pl-8">
+                  <Target className="absolute left-0 top-1 h-5 w-5 text-orange-600" />
+                  <h3 className="font-semibold text-orange-700">Total Deals</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     100 points per deal
                   </p>
                 </div>
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    Total Score = Board Revenue + MSP Revenue + (Voice Seats × 10) + (Total Deals × 100)
+                <div className="mt-6 pt-4 border-t">
+                  <h4 className="font-medium text-sm mb-2">Total Score Formula:</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Board Revenue + MSP Revenue + (Voice Seats × 10) + (Total Deals × 100)
                   </p>
                 </div>
               </div>
