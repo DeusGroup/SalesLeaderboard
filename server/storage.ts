@@ -1,6 +1,6 @@
 import { InsertParticipant, Participant, Admin, participants, admin } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -42,7 +42,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getParticipantsByScore(): Promise<Participant[]> {
-    return db.select().from(participants).orderBy(participants.score, "desc");
+    return db
+      .select()
+      .from(participants)
+      .orderBy(desc(participants.score));
   }
 
   async createParticipant(participant: InsertParticipant): Promise<Participant> {
@@ -69,7 +72,6 @@ export class DatabaseStorage implements IStorage {
     const participant = await this.getParticipant(id);
     if (!participant) return;
 
-    // Update the metrics
     const updatedMetrics = {
       boardRevenue: metrics.boardRevenue ?? participant.boardRevenue,
       mspRevenue: metrics.mspRevenue ?? participant.mspRevenue,
@@ -77,14 +79,12 @@ export class DatabaseStorage implements IStorage {
       totalDeals: metrics.totalDeals ?? participant.totalDeals,
     };
 
-    // Calculate new score based on the point system
-    const score = 
-      Number(updatedMetrics.boardRevenue) + // Direct value (1:1)
-      Number(updatedMetrics.mspRevenue) +   // Direct value (1:1)
-      (Number(updatedMetrics.voiceSeats) * 10) + // 10 points per seat
-      (Number(updatedMetrics.totalDeals) * 100); // 100 points per deal
+    const score =
+      Number(updatedMetrics.boardRevenue) +
+      Number(updatedMetrics.mspRevenue) +
+      (Number(updatedMetrics.voiceSeats) * 10) +
+      (Number(updatedMetrics.totalDeals) * 100);
 
-    // Add to performance history with detailed description
     const performanceHistory = [
       ...(participant.performanceHistory || []),
       {
