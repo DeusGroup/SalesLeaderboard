@@ -42,7 +42,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getParticipantsByScore(): Promise<Participant[]> {
-    return db.select().from(participants).orderBy(participants.score);
+    return db.select().from(participants).orderBy(participants.score, "desc");
   }
 
   async createParticipant(participant: InsertParticipant): Promise<Participant> {
@@ -75,20 +75,20 @@ export class DatabaseStorage implements IStorage {
       ...metrics,
     };
 
-    // Calculate new score
+    // Calculate new score based on the dynamic point system
     const score = 
-      (updatedMetrics.boardRevenue || 0) +
-      (updatedMetrics.mspRevenue || 0) +
-      ((updatedMetrics.voiceSeats || 0) * 10) +
-      ((updatedMetrics.totalDeals || 0) * 100);
+      (updatedMetrics.boardRevenue || 0) + // Direct value (1:1)
+      (updatedMetrics.mspRevenue || 0) +   // Direct value (1:1)
+      ((updatedMetrics.voiceSeats || 0) * 10) + // 10 points per seat
+      ((updatedMetrics.totalDeals || 0) * 100); // 100 points per deal
 
-    // Add to performance history
+    // Add to performance history with detailed description
     const performanceHistory = [
       ...(participant.performanceHistory || []),
       {
         timestamp: new Date().toISOString(),
         score,
-        description: `Score updated to ${score}`,
+        description: `Score updated: Board Revenue $${updatedMetrics.boardRevenue}, MSP Revenue $${updatedMetrics.mspRevenue}, Voice Seats ${updatedMetrics.voiceSeats}, Total Deals ${updatedMetrics.totalDeals}`,
       },
     ];
 
