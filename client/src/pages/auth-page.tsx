@@ -35,14 +35,17 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen grid md:grid-cols-2">
-      <div className="flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg">
-          <CardHeader>
-            <CardTitle>Welcome to Sales Board</CardTitle>
+    <div className="min-h-screen grid place-items-center bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="w-full max-w-lg px-4">
+        <Card className="w-full">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-3xl font-bold text-center">Sales Board</CardTitle>
+            <p className="text-center text-muted-foreground">
+              Track and compete in sales performance
+            </p>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login">
+            <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
@@ -53,13 +56,14 @@ export default function AuthPage() {
                   onSubmit={loginForm.handleSubmit((data) =>
                     loginMutation.mutate(data)
                   )}
-                  className="space-y-4"
+                  className="space-y-4 mt-4"
                 >
                   <div className="space-y-2">
                     <Label htmlFor="login-username">Username</Label>
                     <Input
                       id="login-username"
                       {...loginForm.register("username")}
+                      className="bg-white"
                     />
                   </div>
                   <div className="space-y-2">
@@ -68,17 +72,18 @@ export default function AuthPage() {
                       id="login-password"
                       type="password"
                       {...loginForm.register("password")}
+                      className="bg-white"
                     />
                   </div>
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full bg-primary hover:bg-primary/90"
                     disabled={loginMutation.isPending}
                   >
                     {loginMutation.isPending && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Login
+                    Sign In
                   </Button>
                 </form>
               </TabsContent>
@@ -88,13 +93,14 @@ export default function AuthPage() {
                   onSubmit={registerForm.handleSubmit((data) =>
                     registerMutation.mutate(data as InsertUser)
                   )}
-                  className="space-y-4"
+                  className="space-y-4 mt-4"
                 >
                   <div className="space-y-2">
                     <Label htmlFor="register-username">Username</Label>
                     <Input
                       id="register-username"
                       {...registerForm.register("username")}
+                      className="bg-white"
                     />
                     {registerForm.formState.errors.username && (
                       <p className="text-sm text-destructive">
@@ -107,6 +113,7 @@ export default function AuthPage() {
                     <Input
                       id="register-display-name"
                       {...registerForm.register("displayName")}
+                      className="bg-white"
                     />
                     {registerForm.formState.errors.displayName && (
                       <p className="text-sm text-destructive">
@@ -120,6 +127,7 @@ export default function AuthPage() {
                       id="register-password"
                       type="password"
                       {...registerForm.register("password")}
+                      className="bg-white"
                     />
                     {registerForm.formState.errors.password && (
                       <p className="text-sm text-destructive">
@@ -129,28 +137,19 @@ export default function AuthPage() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full bg-primary hover:bg-primary/90"
                     disabled={registerMutation.isPending}
                   >
                     {registerMutation.isPending && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Register
+                    Create Account
                   </Button>
                 </form>
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
-      </div>
-      <div className="hidden md:flex items-center justify-center bg-muted p-8">
-        <div className="max-w-lg space-y-4">
-          <h1 className="text-4xl font-bold">Sales Board</h1>
-          <p className="text-muted-foreground">
-            Track your sales performance and compete with your colleagues in real-time.
-            Join now to start logging your sales and climb up the leaderboard!
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertSaleSchema } from "@shared/schema";
 import type { Sale } from "@shared/schema";
 import { useForm } from "react-hook-form";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Trophy } from "lucide-react";
 
 interface LeaderboardEntry {
   userId: number;
@@ -57,19 +57,24 @@ export default function HomePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       form.reset();
       toast({
-        title: "Sale recorded",
-        description: "Your sale has been added to the leaderboard",
+        title: "Success!",
+        description: "Your sale has been recorded",
       });
     },
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      <header className="border-b bg-white">
         <div className="container flex items-center justify-between h-16">
-          <h1 className="text-2xl font-bold">Sales Board</h1>
+          <div className="flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Sales Board</h1>
+          </div>
           <div className="flex items-center gap-4">
-            <span>Welcome, {user?.displayName}</span>
+            <span className="text-muted-foreground">
+              Welcome back, <span className="font-medium text-foreground">{user?.displayName}</span>
+            </span>
             <Button
               variant="ghost"
               size="icon"
@@ -87,8 +92,8 @@ export default function HomePage() {
           <div className="space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle>Record Sale</CardTitle>
-                <CardDescription>Add a new sale to the board</CardDescription>
+                <CardTitle>Record New Sale</CardTitle>
+                <CardDescription>Add your latest sale to the board</CardDescription>
               </CardHeader>
               <CardContent>
                 <form
@@ -98,10 +103,11 @@ export default function HomePage() {
                   className="space-y-4"
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="amount">Amount</Label>
+                    <Label htmlFor="amount">Amount ($)</Label>
                     <Input
                       id="amount"
                       type="number"
+                      className="bg-white"
                       {...form.register("amount", { valueAsNumber: true })}
                     />
                     {form.formState.errors.amount && (
@@ -114,6 +120,7 @@ export default function HomePage() {
                     <Label htmlFor="description">Description</Label>
                     <Input
                       id="description"
+                      className="bg-white"
                       {...form.register("description")}
                     />
                     {form.formState.errors.description && (
@@ -130,7 +137,7 @@ export default function HomePage() {
                     {createSaleMutation.isPending && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Record Sale
+                    Submit Sale
                   </Button>
                 </form>
               </CardContent>
@@ -138,8 +145,8 @@ export default function HomePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Your Sales</CardTitle>
-                <CardDescription>Your recent sales history</CardDescription>
+                <CardTitle>Your Sales History</CardTitle>
+                <CardDescription>Track your performance</CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoadingSales ? (
@@ -155,7 +162,7 @@ export default function HomePage() {
                     {sales?.map((sale) => (
                       <div
                         key={sale.id}
-                        className="flex justify-between items-center p-4 rounded-lg border"
+                        className="flex justify-between items-center p-4 rounded-lg bg-white shadow-sm border"
                       >
                         <div>
                           <p className="font-medium">{sale.description}</p>
@@ -163,7 +170,7 @@ export default function HomePage() {
                             {new Date(sale.date).toLocaleDateString()}
                           </p>
                         </div>
-                        <p className="font-bold">${sale.amount}</p>
+                        <p className="font-bold text-primary">${sale.amount.toLocaleString()}</p>
                       </div>
                     ))}
                   </div>
@@ -174,8 +181,11 @@ export default function HomePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Leaderboard</CardTitle>
-              <CardDescription>Top performers</CardDescription>
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                <CardTitle>Leaderboard</CardTitle>
+              </div>
+              <CardDescription>Top sales performers</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingLeaderboard ? (
@@ -191,7 +201,7 @@ export default function HomePage() {
                   {leaderboard?.map((entry, index) => (
                     <div
                       key={entry.userId}
-                      className="flex items-center gap-4 p-4 rounded-lg border"
+                      className="flex items-center gap-4 p-4 rounded-lg bg-white shadow-sm border"
                     >
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
@@ -209,7 +219,7 @@ export default function HomePage() {
                       <div className="flex-1">
                         <p className="font-medium">{entry.displayName}</p>
                         <p className="text-sm text-muted-foreground">
-                          Total sales: ${entry.totalAmount}
+                          Total sales: ${entry.totalAmount.toLocaleString()}
                         </p>
                       </div>
                     </div>
