@@ -17,6 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
   Card,
   CardContent,
 } from "@/components/ui/card";
@@ -26,6 +34,7 @@ export function AdminDashboard() {
   const { logoutMutation } = useAuth();
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<string>("");
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
 
   // Form for adding new participants
   const form = useForm({
@@ -50,6 +59,7 @@ export function AdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
       form.reset();
+      setIsAddUserDialogOpen(false);
       toast({
         title: "Success",
         description: "Participant added successfully",
@@ -128,10 +138,46 @@ export function AdminDashboard() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button className="bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4 mr-2" />
-                Add New User
-              </Button>
+              <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-500 hover:bg-blue-600">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New User
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New User</DialogTitle>
+                  </DialogHeader>
+                  <form
+                    onSubmit={form.handleSubmit((data) =>
+                      createParticipantMutation.mutate(data)
+                    )}
+                    className="space-y-4"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Name</Label>
+                      <Input
+                        id="name"
+                        {...form.register("name")}
+                        placeholder="Enter user name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="score">Initial Score</Label>
+                      <Input
+                        id="score"
+                        type="number"
+                        {...form.register("score", { valueAsNumber: true })}
+                        placeholder="0"
+                      />
+                    </div>
+                    <Button type="submit" className="w-full">
+                      Add User
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
