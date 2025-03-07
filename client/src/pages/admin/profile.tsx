@@ -100,7 +100,7 @@ export function UserProfile() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Trophy className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">IT Incentive</h1>
+            <h1 className="text-2xl font-bold">Sales Board</h1>
           </div>
           <Button variant="ghost" onClick={() => setLocation("/admin/dashboard")}>
             Back to Dashboard
@@ -113,17 +113,19 @@ export function UserProfile() {
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4">
             <AvatarUpload
-              currentAvatarUrl={participant?.avatarUrl}
+              currentAvatarUrl={participant.avatarUrl}
               onUploadComplete={(url) => {
                 updateProfileMutation.mutate({
-                  ...participant,
+                  name: participant.name,
+                  role: participant.role || "Sales Representative",
+                  department: participant.department || "Sales",
                   avatarUrl: url,
                 });
               }}
             />
           </div>
-          <h2 className="text-2xl font-bold mb-1">{participant?.name}</h2>
-          <p className="text-muted-foreground mb-4">{participant?.role || 'Sales Representative'}</p>
+          <h2 className="text-2xl font-bold mb-1">{participant.name}</h2>
+          <p className="text-muted-foreground mb-4">{participant.role || 'Sales Representative'}</p>
           <div className="flex justify-center gap-4 mb-6">
             <Button
               variant="outline"
@@ -196,14 +198,6 @@ export function UserProfile() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="font-bold text-primary">+{entry.score}</span>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon">
-                        <PenSquare className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -225,6 +219,7 @@ export function UserProfile() {
                   name: formData.get("name") as string,
                   role: formData.get("role") as string,
                   department: formData.get("department") as string,
+                  avatarUrl: participant.avatarUrl,
                 });
               }}
               className="space-y-4"
@@ -252,7 +247,7 @@ export function UserProfile() {
                 <Input
                   id="department"
                   name="department"
-                  defaultValue={participant.department || ""}
+                  defaultValue={participant.department || "Sales"}
                   placeholder="Enter department"
                 />
               </div>

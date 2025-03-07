@@ -130,7 +130,7 @@ export function AdminDashboard() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Trophy className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">IT Incentive</h1>
+            <h1 className="text-2xl font-bold">Sales Board</h1>
           </div>
           <div className="flex items-center gap-4">
             <Button 
@@ -232,9 +232,17 @@ export function AdminDashboard() {
                 <div className="flex items-center gap-2">
                   <Link href={`/admin/profile/${participant.id}`}>
                     <a className="flex items-center gap-2 hover:text-primary">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
-                        {participant.name.charAt(0).toUpperCase()}
-                      </div>
+                      {participant.avatarUrl ? (
+                        <img
+                          src={participant.avatarUrl}
+                          alt={participant.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
+                          {participant.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <span className="font-medium">{participant.name}</span>
                     </a>
                   </Link>
