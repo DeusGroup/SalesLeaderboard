@@ -19,7 +19,7 @@ export default function LeaderboardPage() {
               alt="CCP Office Technology Solutions" 
               className="h-8 w-auto object-contain"
             />
-            <h1 className="text-2xl font-bold text-white">Sales Board</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-white">Sales Board</h1>
           </div>
           <Link href="/admin/login">
             <button className="text-sm text-white/80 hover:text-white transition-colors">
@@ -31,7 +31,7 @@ export default function LeaderboardPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-[1fr,300px]">
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-x-auto pb-4">
             {isLoading ? (
               <div className="text-center py-8">Loading...</div>
             ) : participants?.length === 0 ? (
@@ -39,31 +39,34 @@ export default function LeaderboardPage() {
                 No participants yet
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 min-w-[800px] lg:min-w-0">
                 {/* Table Header */}
                 <div className="grid grid-cols-6 gap-4 py-3 px-6 bg-white rounded-lg shadow-sm border-b-2 border-[#00B140]/10">
                   <div className="font-semibold text-sm text-[#1B3B6B]">Name</div>
                   <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <DollarSign className="h-4 w-4" />
-                    Board Revenue
+                    <span className="hidden md:inline">Board Revenue</span>
+                    <span className="md:hidden">Board Rev.</span>
                   </div>
                   <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <Building2 className="h-4 w-4" />
-                    MSP Revenue
+                    <span className="hidden md:inline">MSP Revenue</span>
+                    <span className="md:hidden">MSP Rev.</span>
                   </div>
                   <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <Phone className="h-4 w-4" />
-                    Voice Seats
+                    <span>Voice Seats</span>
                   </div>
                   <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <Target className="h-4 w-4" />
-                    Total Deals
+                    <span>Total Deals</span>
                   </div>
                   <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <Trophy className="h-4 w-4 text-[#00B140]" />
-                    Total Score
+                    <span>Total Score</span>
                   </div>
                 </div>
+
                 {/* Participant Rows */}
                 {participants?.map((participant, index) => (
                   <div
@@ -91,15 +94,15 @@ export default function LeaderboardPage() {
                           {participant.name.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      <span className="font-medium">{participant.name}</span>
+                      <span className="font-medium text-sm md:text-base">{participant.name}</span>
                     </div>
-                    <div className="text-center font-medium">${participant.boardRevenue.toLocaleString()}</div>
-                    <div className="text-center font-medium">${participant.mspRevenue.toLocaleString()}</div>
-                    <div className="text-center font-medium">{participant.voiceSeats.toLocaleString()}</div>
-                    <div className="text-center font-medium">{participant.totalDeals.toLocaleString()}</div>
+                    <div className="text-center font-medium text-sm md:text-base">${participant.boardRevenue.toLocaleString()}</div>
+                    <div className="text-center font-medium text-sm md:text-base">${participant.mspRevenue.toLocaleString()}</div>
+                    <div className="text-center font-medium text-sm md:text-base">{participant.voiceSeats.toLocaleString()}</div>
+                    <div className="text-center font-medium text-sm md:text-base">{participant.totalDeals.toLocaleString()}</div>
                     <div className="flex items-center justify-center">
                       <div className="bg-[#00B140]/10 rounded-lg px-3 py-1">
-                        <span className="text-lg font-bold text-[#00B140]">
+                        <span className="text-base md:text-lg font-bold text-[#00B140]">
                           {participant.score.toLocaleString()}
                         </span>
                       </div>
@@ -111,9 +114,9 @@ export default function LeaderboardPage() {
           </div>
 
           {/* Points Legend */}
-          <Card className="h-fit bg-gradient-to-br from-white to-gray-50 border-t-4 border-t-[#00B140]">
+          <Card className="h-fit bg-gradient-to-br from-white to-gray-50 border-t-4 border-t-[#00B140] order-first lg:order-none">
             <CardHeader className="pb-3">
-              <CardTitle className="text-xl font-bold flex items-center gap-2">
+              <CardTitle className="text-lg md:text-xl font-bold flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-[#00B140]" />
                 Points System
               </CardTitle>
