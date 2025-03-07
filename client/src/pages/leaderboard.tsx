@@ -37,13 +37,13 @@ export default function LeaderboardPage() {
             ) : (
               <div className="space-y-4">
                 {/* Table Header */}
-                <div className="grid grid-cols-6 gap-4 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
-                  <div>Name</div>
-                  <div>Board Revenue ($)</div>
-                  <div>MSP ($)</div>
-                  <div>Voice Seats</div>
-                  <div>Total Deals</div>
-                  <div>Total Score</div>
+                <div className="grid grid-cols-6 gap-4 py-3 px-6 bg-white rounded-lg shadow-sm border-b-2 border-primary/10">
+                  <div className="font-semibold text-sm text-gray-600">Name</div>
+                  <div className="font-semibold text-sm text-gray-600 text-right">Board Revenue ($)</div>
+                  <div className="font-semibold text-sm text-gray-600 text-right">MSP ($)</div>
+                  <div className="font-semibold text-sm text-gray-600 text-right">Voice Seats</div>
+                  <div className="font-semibold text-sm text-gray-600 text-right">Total Deals</div>
+                  <div className="font-semibold text-sm text-gray-600 text-right">Total Score</div>
                 </div>
                 {/* Participant Rows */}
                 {participants?.map((participant, index) => (
@@ -74,11 +74,11 @@ export default function LeaderboardPage() {
                       )}
                       <span className="font-medium">{participant.name}</span>
                     </div>
-                    <div>{participant.boardRevenue}</div>
-                    <div>{participant.mspRevenue}</div>
-                    <div>{participant.voiceSeats}</div>
-                    <div>{participant.totalDeals}</div>
-                    <div className="font-bold text-primary">{participant.score}</div>
+                    <div className="text-right font-medium">${participant.boardRevenue.toLocaleString()}</div>
+                    <div className="text-right font-medium">${participant.mspRevenue.toLocaleString()}</div>
+                    <div className="text-right font-medium">{participant.voiceSeats.toLocaleString()}</div>
+                    <div className="text-right font-medium">{participant.totalDeals.toLocaleString()}</div>
+                    <div className="text-right font-bold text-primary">{participant.score.toLocaleString()}</div>
                   </div>
                 ))}
               </div>
