@@ -11,6 +11,7 @@ export interface IStorage {
   getParticipant(id: number): Promise<Participant | undefined>;
   getParticipantsByScore(): Promise<Participant[]>;
   createParticipant(participant: InsertParticipant): Promise<Participant>;
+  updateParticipantProfile(id: number, data: { name: string; role: string }): Promise<void>;
   updateParticipantMetrics(
     id: number,
     metrics: {
@@ -47,6 +48,13 @@ export class DatabaseStorage implements IStorage {
   async createParticipant(participant: InsertParticipant): Promise<Participant> {
     const [created] = await db.insert(participants).values(participant).returning();
     return created;
+  }
+
+  async updateParticipantProfile(id: number, data: { name: string; role: string }): Promise<void> {
+    await db
+      .update(participants)
+      .set(data)
+      .where(eq(participants.id, id));
   }
 
   async updateParticipantMetrics(

@@ -3,9 +3,15 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Participant } from "@shared/schema";
-import { Trophy, PenSquare, Trash2 } from "lucide-react";
+import { Trophy, PenSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -22,36 +28,29 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Label } from "@/components/ui/label";
 
 export function UserProfile() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Query participant data
   const { data: participant, isLoading } = useQuery<Participant>({
     queryKey: ["/api/participants", id],
-    retry: false, // Don't retry on failure
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to load participant data",
-        variant: "destructive",
-      });
-      setLocation("/admin/dashboard");
-    },
+    retry: false,
   });
 
-  // Mutation for updating participant
-  const updateParticipantMutation = useMutation({
-    mutationFn: async (data: Partial<Participant>) => {
-      const res = await apiRequest("PATCH", `/api/participants/${id}/metrics`, data);
+  // Mutation for updating participant profile
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: { name: string; role: string }) => {
+      const res = await apiRequest("PATCH", `/api/participants/${id}/profile`, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/participants", id] });
-      setIsEditing(false);
+      setIsEditDialogOpen(false);
       toast({
         title: "Success",
         description: "Profile updated successfully",
@@ -105,81 +104,21 @@ export function UserProfile() {
                 <p className="text-muted-foreground">{participant.role || 'Sales Representative'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-3xl font-bold text-primary">{participant.score || 0}</h2>
-              <span className="text-muted-foreground">points</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isEditing ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Board Revenue ($)</label>
-                    <Input
-                      type="number"
-                      defaultValue={participant.boardRevenue}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (!isNaN(value)) {
-                          updateParticipantMutation.mutate({ boardRevenue: value });
-                        }
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">MSP Revenue ($)</label>
-                    <Input
-                      type="number"
-                      defaultValue={participant.mspRevenue}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (!isNaN(value)) {
-                          updateParticipantMutation.mutate({ mspRevenue: value });
-                        }
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Voice Seats</label>
-                    <Input
-                      type="number"
-                      defaultValue={participant.voiceSeats}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (!isNaN(value)) {
-                          updateParticipantMutation.mutate({ voiceSeats: value });
-                        }
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Total Deals</label>
-                    <Input
-                      type="number"
-                      defaultValue={participant.totalDeals}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value);
-                        if (!isNaN(value)) {
-                          updateParticipantMutation.mutate({ totalDeals: value });
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-                <Button onClick={() => setIsEditing(false)}>Done</Button>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <h2 className="text-3xl font-bold text-primary">{participant.score || 0}</h2>
+                <span className="text-sm text-muted-foreground">points</span>
               </div>
-            ) : (
               <Button
                 variant="outline"
-                onClick={() => setIsEditing(true)}
+                onClick={() => setIsEditDialogOpen(true)}
                 className="gap-2"
               >
                 <PenSquare className="h-4 w-4" />
                 Edit Profile
               </Button>
-            )}
-          </CardContent>
+            </div>
+          </CardHeader>
         </Card>
 
         <div className="grid gap-8 lg:grid-cols-2">
@@ -233,6 +172,51 @@ export function UserProfile() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Edit Profile Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Profile</DialogTitle>
+            </DialogHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                updateProfileMutation.mutate({
+                  name: formData.get("name") as string,
+                  role: formData.get("role") as string,
+                });
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  defaultValue={participant.name}
+                  placeholder="Enter name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">Job Title</Label>
+                <Input
+                  id="role"
+                  name="role"
+                  defaultValue={participant.role || "Sales Representative"}
+                  placeholder="Enter job title"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Update Profile</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

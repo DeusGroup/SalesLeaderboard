@@ -45,6 +45,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/participants/:id/profile", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const { id } = req.params;
+    const { name, role } = req.body;
+
+    try {
+      await storage.updateParticipantProfile(parseInt(id), { name, role });
+      const participant = await storage.getParticipant(parseInt(id));
+      res.json(participant);
+    } catch (error) {
+      res.status(400).json({
+        error: "Failed to update profile",
+        details: error instanceof Error ? error.message : undefined
+      });
+    }
+  });
+
   app.patch("/api/participants/:id/metrics", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
