@@ -112,17 +112,30 @@ export function UserProfile() {
         {/* Profile Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4">
-            <AvatarUpload
-              currentAvatarUrl={participant.avatarUrl}
-              onUploadComplete={(url) => {
-                updateProfileMutation.mutate({
-                  name: participant.name,
-                  role: participant.role || "Sales Representative",
-                  department: participant.department || "Sales",
-                  avatarUrl: url,
-                });
-              }}
-            />
+            {participant.avatarUrl ? (
+              <img
+                src={participant.avatarUrl}
+                alt="Avatar"
+                className="w-24 h-24 rounded-full object-cover mx-auto"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-4xl font-bold mx-auto">
+                {participant.name?.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
+            <div className="mt-4">
+              <AvatarUpload
+                currentAvatarUrl={participant.avatarUrl}
+                onUploadComplete={(url) => {
+                  updateProfileMutation.mutate({
+                    name: participant.name,
+                    role: participant.role || "Sales Representative",
+                    department: participant.department || "Sales",
+                    avatarUrl: url,
+                  });
+                }}
+              />
+            </div>
           </div>
           <h2 className="text-2xl font-bold mb-1">{participant.name}</h2>
           <p className="text-muted-foreground mb-4">{participant.role || 'Sales Representative'}</p>

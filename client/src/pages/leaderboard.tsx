@@ -56,14 +56,22 @@ export default function LeaderboardPage() {
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium ${
-                        index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                        index === 1 ? 'bg-gray-100 text-gray-700' :
-                        index === 2 ? 'bg-orange-100 text-orange-700' :
-                        'bg-muted text-muted-foreground'
-                      }`}>
-                        {index + 1}
-                      </div>
+                      {participant.avatarUrl ? (
+                        <img
+                          src={participant.avatarUrl}
+                          alt={participant.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium ${
+                          index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                          index === 1 ? 'bg-gray-100 text-gray-700' :
+                          index === 2 ? 'bg-orange-100 text-orange-700' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          {participant.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <span className="font-medium">{participant.name}</span>
                     </div>
                     <div>{participant.boardRevenue}</div>
