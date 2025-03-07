@@ -10,13 +10,6 @@ import { Trophy, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -24,17 +17,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 
 export function AdminDashboard() {
   const { logoutMutation } = useAuth();
   const { toast } = useToast();
-  const [selectedUser, setSelectedUser] = useState<string>("");
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
 
   // Form for adding new participants
@@ -75,27 +63,6 @@ export function AdminDashboard() {
     },
   });
 
-  // Mutation for deleting participants
-  const deleteParticipantMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/participants/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
-      toast({
-        title: "Success",
-        description: "Participant deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   // Mutation for updating participant metrics
   const updateMetricsMutation = useMutation({
     mutationFn: async (data: { 
@@ -124,6 +91,28 @@ export function AdminDashboard() {
     },
   });
 
+  // Mutation for deleting participants
+  const deleteParticipantMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/participants/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
+      toast({
+        title: "Success",
+        description: "Participant deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b bg-white shadow-sm">
@@ -148,80 +137,62 @@ export function AdminDashboard() {
       </header>
 
       <main className="container mx-auto py-8 px-4">
-        {/* Manage Profiles Section */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Manage Profiles</h2>
-          <p className="text-sm text-muted-foreground mb-4">Select an employee to view and edit their profile</p>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger className="w-[300px]">
-                  <SelectValue placeholder="Select user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {participants?.map((participant) => (
-                    <SelectItem key={participant.id} value={participant.id.toString()}>
-                      {participant.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-500 hover:bg-blue-600">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New User
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New User</DialogTitle>
-                  </DialogHeader>
-                  <form
-                    onSubmit={form.handleSubmit((data) =>
-                      createParticipantMutation.mutate(data)
-                    )}
-                    className="space-y-4"
-                  >
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Name</Label>
-                      <Input
-                        id="name"
-                        {...form.register("name")}
-                        placeholder="Enter user name"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="score">Initial Score</Label>
-                      <Input
-                        id="score"
-                        type="number"
-                        {...form.register("score", { valueAsNumber: true })}
-                        placeholder="0"
-                      />
-                    </div>
-                    <Button type="submit" className="w-full">
-                      Add User
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </div>
-
         {/* Award Points Section */}
         <div>
-          <h2 className="text-lg font-semibold mb-6">Award Points</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold">Award Points</h2>
+            <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-blue-500 hover:bg-blue-600">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New User
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New User</DialogTitle>
+                </DialogHeader>
+                <form
+                  onSubmit={form.handleSubmit((data) =>
+                    createParticipantMutation.mutate(data)
+                  )}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      {...form.register("name")}
+                      placeholder="Enter user name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="score">Initial Score</Label>
+                    <Input
+                      id="score"
+                      type="number"
+                      {...form.register("score", { valueAsNumber: true })}
+                      placeholder="0"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Add User
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
           <div className="space-y-4">
             {/* Table Header */}
-            <div className="grid grid-cols-6 gap-4 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
+            <div className="grid grid-cols-7 gap-4 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
               <div>Name</div>
               <div>Board Revenue ($)</div>
               <div>MSP ($)</div>
               <div>Voice Seats</div>
               <div>Total Deals</div>
               <div>Total Score</div>
+              <div></div>
             </div>
             {/* Participant Rows */}
             {participants?.map((participant) => (
@@ -308,8 +279,11 @@ export function AdminDashboard() {
                   }}
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{participant.score}</span>
-                  <span className="text-sm text-muted-foreground">points</span>
+                  <div className="bg-primary/10 rounded-lg px-3 py-1">
+                    <span className="font-bold text-primary">
+                      {participant.score.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
