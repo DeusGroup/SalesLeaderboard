@@ -11,7 +11,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <header className="border-b bg-[#1B3B6B] text-white">
+      <header className="border-b bg-[#1B3B6B] text-white shadow-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-4">
             <img 
@@ -22,7 +22,7 @@ export default function LeaderboardPage() {
             <h1 className="text-2xl font-bold text-white">Sales Board</h1>
           </div>
           <Link href="/admin/login">
-            <button className="text-sm text-white/80 hover:text-white">
+            <button className="text-sm text-white/80 hover:text-white transition-colors">
               Admin Login
             </button>
           </Link>
