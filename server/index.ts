@@ -10,6 +10,10 @@ app.use(express.urlencoded({ extended: false }));
 // Add security headers for HTTPS
 app.use((req, res, next) => {
   res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-XSS-Protection', '1; mode=block');
+  res.header('X-Frame-Options', 'SAMEORIGIN');
+  res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
 });
 
@@ -66,14 +70,26 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
-  const port = 5000;
+  // Use environment port if available, otherwise use 5000
+  const port = process.env.PORT || 5000;
   server.listen({
     port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+  }).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      log(`Port ${port} is already in use. Trying port ${Number(port) + 1}...`);
+      server.listen({
+        port: Number(port) + 1,
+        host: "0.0.0.0",
+        reusePort: true,
+      }, () => {
+        log(`serving on port ${Number(port) + 1}`);
+      });
+    } else {
+      log(`Error starting server: ${err.message}`);
+    }
   });
 })();
