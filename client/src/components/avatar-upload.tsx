@@ -26,6 +26,16 @@ export function AvatarUpload({ currentAvatarUrl, onUploadComplete }: AvatarUploa
       return;
     }
 
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
 
     try {
@@ -37,7 +47,10 @@ export function AvatarUpload({ currentAvatarUrl, onUploadComplete }: AvatarUploa
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Upload failed');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Upload failed');
+      }
 
       const { url } = await response.json();
       onUploadComplete(url);
@@ -47,6 +60,7 @@ export function AvatarUpload({ currentAvatarUrl, onUploadComplete }: AvatarUploa
         description: "Avatar uploaded successfully",
       });
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to upload avatar",
