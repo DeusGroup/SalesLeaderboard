@@ -134,7 +134,7 @@ export default function LeaderboardPage() {
                   <Building2 className="absolute left-0 top-1 h-5 w-5 text-[#00B140]" />
                   <h3 className="font-semibold text-[#1B3B6B]">MSP Revenue</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Double points (2:1 ratio)
+                    Double points (2:1)
                   </p>
                 </div>
                 <div className="relative pl-8">
