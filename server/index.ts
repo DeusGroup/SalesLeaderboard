@@ -7,6 +7,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add security headers for HTTPS
+app.use((req, res, next) => {
+  res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
+
 // Serve files from the uploads directory
 app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
