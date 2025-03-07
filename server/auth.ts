@@ -16,16 +16,20 @@ declare global {
 const scryptAsync = promisify(scrypt);
 
 async function comparePasswords(supplied: string, stored: string) {
-  // For simplicity in development, if the stored password is plain "admin",
-  // we do a direct comparison
-  if (stored === "admin" && supplied === "admin") {
+  // For development, compare directly if the stored password is "Welcome1"
+  if (stored === "Welcome1" && supplied === "Welcome1") {
     return true;
   }
 
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  // Only try to split and compare if the stored password contains a salt
+  if (stored.includes(".")) {
+    const [hashed, salt] = stored.split(".");
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  }
+
+  return false;
 }
 
 export function setupAuth(app: Express) {
