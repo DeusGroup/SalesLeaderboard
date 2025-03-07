@@ -17,15 +17,15 @@ export default function LeaderboardPage() {
             <h1 className="text-2xl font-bold">Sales Board</h1>
           </div>
           <Link href="/admin/login">
-            <a className="text-sm text-muted-foreground hover:text-foreground">
+            <button className="text-sm text-muted-foreground hover:text-foreground">
               Admin Login
-            </a>
+            </button>
           </Link>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {isLoading ? (
             <div className="text-center py-8">Loading...</div>
           ) : participants?.length === 0 ? (
@@ -34,30 +34,41 @@ export default function LeaderboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Table Header */}
+              <div className="grid grid-cols-6 gap-4 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
+                <div>Name</div>
+                <div>Board Revenue ($)</div>
+                <div>MSP ($)</div>
+                <div>Voice Seats</div>
+                <div>Total Deals</div>
+                <div>Total Score</div>
+              </div>
+              {/* Participant Rows */}
               {participants?.map((participant, index) => (
                 <div
                   key={participant.id}
-                  className="flex items-center gap-4 p-4 rounded-lg bg-white shadow-sm border"
+                  className={`grid grid-cols-6 gap-4 items-center p-4 rounded-lg bg-white shadow-sm border ${
+                    index === 0 ? 'border-yellow-400 bg-yellow-50' :
+                    index === 1 ? 'border-gray-400 bg-gray-50' :
+                    index === 2 ? 'border-orange-400 bg-orange-50' : ''
+                  }`}
                 >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                      index === 0
-                        ? "bg-yellow-100 text-yellow-700"
-                        : index === 1
-                        ? "bg-gray-100 text-gray-700"
-                        : index === 2
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-muted"
-                    }`}
-                  >
-                    {index + 1}
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium ${
+                      index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                      index === 1 ? 'bg-gray-100 text-gray-700' :
+                      index === 2 ? 'bg-orange-100 text-orange-700' :
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <span className="font-medium">{participant.name}</span>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{participant.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Score: {participant.score}
-                    </p>
-                  </div>
+                  <div>{participant.boardRevenue}</div>
+                  <div>{participant.mspRevenue}</div>
+                  <div>{participant.voiceSeats}</div>
+                  <div>{participant.totalDeals}</div>
+                  <div className="font-bold text-primary">{participant.score}</div>
                 </div>
               ))}
             </div>
