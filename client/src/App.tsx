@@ -9,6 +9,7 @@ import LeaderboardPage from "@/pages/leaderboard";
 import AdminLoginPage from "@/pages/admin/login";
 import NotFound from "@/pages/not-found";
 import { AdminDashboard } from "@/pages/admin/dashboard";
+import { UserProfile } from "@/pages/admin/profile";
 
 // Components
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/" component={LeaderboardPage} />
       <Route path="/admin/login" component={AdminLoginPage} />
       <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} />
+      <ProtectedRoute path="/admin/profile/:id" component={UserProfile} />
       <Route component={NotFound} />
     </Switch>
   );

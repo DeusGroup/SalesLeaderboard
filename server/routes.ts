@@ -20,6 +20,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(participants);
   });
 
+  app.get("/api/participants/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const { id } = req.params;
+    const participant = await storage.getParticipant(parseInt(id));
+    if (!participant) {
+      return res.status(404).json({ error: "Participant not found" });
+    }
+    res.json(participant);
+  });
+
   app.post("/api/participants", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 

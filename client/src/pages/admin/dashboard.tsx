@@ -29,6 +29,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 export function AdminDashboard() {
   const { logoutMutation } = useAuth();
@@ -229,10 +230,14 @@ export function AdminDashboard() {
                 className="grid grid-cols-7 gap-4 items-center p-4 rounded-lg border bg-white"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
-                    {participant.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="font-medium">{participant.name}</span>
+                  <Link href={`/admin/profile/${participant.id}`}>
+                    <a className="flex items-center gap-2 hover:text-primary">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
+                        {participant.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-medium">{participant.name}</span>
+                    </a>
+                  </Link>
                 </div>
                 <Input
                   type="number"
