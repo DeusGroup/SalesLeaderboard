@@ -1,27 +1,31 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { queryClient } from "@/lib/queryClient";
-import { apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertParticipantSchema } from "@shared/schema";
 import type { Participant } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trophy, LogOut, Loader2 } from "lucide-react";
+import { Trophy, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 export function AdminDashboard() {
   const { logoutMutation } = useAuth();
   const { toast } = useToast();
+  const [selectedUser, setSelectedUser] = useState<string>("");
 
   // Form for adding new participants
   const form = useForm({
@@ -83,121 +87,88 @@ export function AdminDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <header className="border-b bg-white">
+    <div className="min-h-screen bg-white">
+      <header className="border-b bg-white shadow-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Trophy className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold">IT Incentive</h1>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => logoutMutation.mutate()}
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => window.location.href="/"}>
+              Leaderboard
+            </Button>
+            <Button 
+              variant="ghost"
+              onClick={() => logoutMutation.mutate()}>
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Participant</CardTitle>
-                <CardDescription>Create a new participant entry</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form
-                  onSubmit={form.handleSubmit((data) =>
-                    createParticipantMutation.mutate(data)
-                  )}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      {...form.register("name")}
-                      className="bg-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="score">Initial Score</Label>
-                    <Input
-                      id="score"
-                      type="number"
-                      {...form.register("score", { valueAsNumber: true })}
-                      className="bg-white"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    disabled={createParticipantMutation.isPending}
-                  >
-                    {createParticipantMutation.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Add Participant
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-primary" />
-                <CardTitle>Manage Participants</CardTitle>
-              </div>
-              <CardDescription>Update participant scores</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : participants?.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No participants yet
-                </p>
-              ) : (
-                <div className="space-y-4">
+      <main className="container mx-auto py-8 px-4">
+        {/* Manage Profiles Section */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Manage Profiles</h2>
+          <p className="text-sm text-muted-foreground mb-4">Select an employee to view and edit their profile</p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="w-[300px]">
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent>
                   {participants?.map((participant) => (
-                    <div
-                      key={participant.id}
-                      className="flex items-center gap-4 p-4 rounded-lg bg-white shadow-sm border"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium">{participant.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Input
-                            type="number"
-                            defaultValue={participant.score}
-                            className="w-24 bg-white"
-                            onChange={(e) => {
-                              const newScore = parseInt(e.target.value);
-                              if (!isNaN(newScore)) {
-                                updateScoreMutation.mutate({
-                                  id: participant.id,
-                                  score: newScore,
-                                });
-                              }
-                            }}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            points
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    <SelectItem key={participant.id} value={participant.id.toString()}>
+                      {participant.name}
+                    </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <Button className="bg-blue-500 hover:bg-blue-600">
+                <Plus className="h-4 w-4 mr-2" />
+                Add New User
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Award Points Section */}
+        <div>
+          <h2 className="text-lg font-semibold mb-6">Award Points</h2>
+          <div className="space-y-4">
+            {participants?.map((participant) => (
+              <div
+                key={participant.id}
+                className="flex items-center gap-4 p-4 rounded-lg border bg-white"
+              >
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
+                  {participant.name.charAt(0).toUpperCase()}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <span className="flex-1 font-medium">{participant.name}</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    defaultValue={participant.score}
+                    className="w-24"
+                    onChange={(e) => {
+                      const newScore = parseInt(e.target.value);
+                      if (!isNaN(newScore)) {
+                        updateScoreMutation.mutate({
+                          id: participant.id,
+                          score: newScore,
+                        });
+                      }
+                    }}
+                  />
+                  <span className="text-sm text-muted-foreground">points</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     </div>
