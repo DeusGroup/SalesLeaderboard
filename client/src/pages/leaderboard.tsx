@@ -10,15 +10,15 @@ export default function LeaderboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <header className="border-b bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <header className="border-b bg-[#1B3B6B] text-white">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Sales Board</h1>
+          <div className="flex items-center gap-4">
+            <img src="/CCP.jpg" alt="CCP Logo" className="h-10 w-auto" />
+            <h1 className="text-2xl font-bold text-white">Sales Board</h1>
           </div>
           <Link href="/admin/login">
-            <button className="text-sm text-muted-foreground hover:text-foreground">
+            <button className="text-sm text-white/80 hover:text-white">
               Admin Login
             </button>
           </Link>
@@ -37,26 +37,26 @@ export default function LeaderboardPage() {
             ) : (
               <div className="space-y-4">
                 {/* Table Header */}
-                <div className="grid grid-cols-6 gap-4 py-3 px-6 bg-white rounded-lg shadow-sm border-b-2 border-primary/10">
-                  <div className="font-semibold text-sm text-gray-600">Name</div>
-                  <div className="font-semibold text-sm text-gray-600 text-center flex items-center justify-center gap-1">
+                <div className="grid grid-cols-6 gap-4 py-3 px-6 bg-white rounded-lg shadow-sm border-b-2 border-[#00B140]/10">
+                  <div className="font-semibold text-sm text-[#1B3B6B]">Name</div>
+                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <DollarSign className="h-4 w-4" />
                     Board Revenue
                   </div>
-                  <div className="font-semibold text-sm text-gray-600 text-center flex items-center justify-center gap-1">
+                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <Building2 className="h-4 w-4" />
                     MSP Revenue
                   </div>
-                  <div className="font-semibold text-sm text-gray-600 text-center flex items-center justify-center gap-1">
+                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <Phone className="h-4 w-4" />
                     Voice Seats
                   </div>
-                  <div className="font-semibold text-sm text-gray-600 text-center flex items-center justify-center gap-1">
+                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <Target className="h-4 w-4" />
                     Total Deals
                   </div>
-                  <div className="font-semibold text-sm text-gray-600 text-center flex items-center justify-center gap-1">
-                    <Trophy className="h-4 w-4 text-primary" />
+                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
+                    <Trophy className="h-4 w-4 text-[#00B140]" />
                     Total Score
                   </div>
                 </div>
@@ -65,9 +65,9 @@ export default function LeaderboardPage() {
                   <div
                     key={participant.id}
                     className={`grid grid-cols-6 gap-4 items-center p-4 rounded-lg bg-white shadow-sm border ${
-                      index === 0 ? 'border-yellow-400 bg-yellow-50' :
+                      index === 0 ? 'border-[#00B140] bg-green-50' :
                       index === 1 ? 'border-gray-400 bg-gray-50' :
-                      index === 2 ? 'border-orange-400 bg-orange-50' : ''
+                      index === 2 ? 'border-[#1B3B6B] bg-blue-50' : ''
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -79,9 +79,9 @@ export default function LeaderboardPage() {
                         />
                       ) : (
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium ${
-                          index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                          index === 0 ? 'bg-green-100 text-[#00B140]' :
                           index === 1 ? 'bg-gray-100 text-gray-700' :
-                          index === 2 ? 'bg-orange-100 text-orange-700' :
+                          index === 2 ? 'bg-blue-100 text-[#1B3B6B]' :
                           'bg-muted text-muted-foreground'
                         }`}>
                           {participant.name.charAt(0).toUpperCase()}
@@ -94,8 +94,8 @@ export default function LeaderboardPage() {
                     <div className="text-center font-medium">{participant.voiceSeats.toLocaleString()}</div>
                     <div className="text-center font-medium">{participant.totalDeals.toLocaleString()}</div>
                     <div className="flex items-center justify-center">
-                      <div className="bg-primary/10 rounded-lg px-3 py-1">
-                        <span className="text-lg font-bold text-primary">
+                      <div className="bg-[#00B140]/10 rounded-lg px-3 py-1">
+                        <span className="text-lg font-bold text-[#00B140]">
                           {participant.score.toLocaleString()}
                         </span>
                       </div>
@@ -107,39 +107,39 @@ export default function LeaderboardPage() {
           </div>
 
           {/* Points Legend */}
-          <Card className="h-fit bg-gradient-to-br from-white to-gray-50 border-t-4 border-t-primary">
+          <Card className="h-fit bg-gradient-to-br from-white to-gray-50 border-t-4 border-t-[#00B140]">
             <CardHeader className="pb-3">
               <CardTitle className="text-xl font-bold flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-primary" />
+                <Trophy className="h-5 w-5 text-[#00B140]" />
                 Points System
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="relative pl-8">
-                  <DollarSign className="absolute left-0 top-1 h-5 w-5 text-green-600" />
-                  <h3 className="font-semibold text-green-700">Board Revenue</h3>
+                  <DollarSign className="absolute left-0 top-1 h-5 w-5 text-[#00B140]" />
+                  <h3 className="font-semibold text-[#1B3B6B]">Board Revenue</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Direct dollar value (1:1)
                   </p>
                 </div>
                 <div className="relative pl-8">
-                  <Building2 className="absolute left-0 top-1 h-5 w-5 text-blue-600" />
-                  <h3 className="font-semibold text-blue-700">MSP Revenue</h3>
+                  <Building2 className="absolute left-0 top-1 h-5 w-5 text-[#00B140]" />
+                  <h3 className="font-semibold text-[#1B3B6B]">MSP Revenue</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Direct dollar value (1:1)
                   </p>
                 </div>
                 <div className="relative pl-8">
-                  <Phone className="absolute left-0 top-1 h-5 w-5 text-purple-600" />
-                  <h3 className="font-semibold text-purple-700">Voice Seats</h3>
+                  <Phone className="absolute left-0 top-1 h-5 w-5 text-[#00B140]" />
+                  <h3 className="font-semibold text-[#1B3B6B]">Voice Seats</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     10 points per seat
                   </p>
                 </div>
                 <div className="relative pl-8">
-                  <Target className="absolute left-0 top-1 h-5 w-5 text-orange-600" />
-                  <h3 className="font-semibold text-orange-700">Total Deals</h3>
+                  <Target className="absolute left-0 top-1 h-5 w-5 text-[#00B140]" />
+                  <h3 className="font-semibold text-[#1B3B6B]">Total Deals</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     100 points per deal
                   </p>
