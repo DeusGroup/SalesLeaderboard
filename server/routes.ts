@@ -35,19 +35,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/participants/:id/score", async (req, res) => {
+  app.patch("/api/participants/:id/metrics", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const { id } = req.params;
-    const { score } = req.body;
+    const { boardRevenue, mspRevenue, voiceSeats, totalDeals } = req.body;
 
     try {
-      await storage.updateParticipantScore(parseInt(id), score);
+      await storage.updateParticipantMetrics(parseInt(id), {
+        boardRevenue,
+        mspRevenue,
+        voiceSeats,
+        totalDeals
+      });
       const participant = await storage.getParticipant(parseInt(id));
       res.json(participant);
     } catch (error) {
       res.status(400).json({
-        error: "Failed to update score",
+        error: "Failed to update metrics",
         details: error instanceof Error ? error.message : undefined
       });
     }

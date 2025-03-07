@@ -5,6 +5,10 @@ import { z } from "zod";
 export const participants = pgTable("participants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  boardRevenue: integer("board_revenue").notNull().default(0),
+  mspRevenue: integer("msp_revenue").notNull().default(0),
+  voiceSeats: integer("voice_seats").notNull().default(0),
+  totalDeals: integer("total_deals").notNull().default(0),
   score: integer("score").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -18,6 +22,10 @@ export const admin = pgTable("admin", {
 // Schema for participant creation/update
 export const insertParticipantSchema = createInsertSchema(participants).pick({
   name: true,
+  boardRevenue: true,
+  mspRevenue: true,
+  voiceSeats: true,
+  totalDeals: true,
   score: true,
 });
 

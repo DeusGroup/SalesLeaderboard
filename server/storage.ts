@@ -9,6 +9,15 @@ export interface IStorage {
   getParticipantsByScore(): Promise<Participant[]>;
   createParticipant(participant: InsertParticipant): Promise<Participant>;
   updateParticipantScore(id: number, score: number): Promise<void>;
+  updateParticipantMetrics(
+    id: number,
+    metrics: {
+      boardRevenue?: number;
+      mspRevenue?: number;
+      voiceSeats?: number;
+      totalDeals?: number;
+    }
+  ): Promise<void>;
   getAdminByUsername(username: string): Promise<Admin | undefined>;
   sessionStore: session.Store;
 }
@@ -49,6 +58,11 @@ export class MemStorage implements IStorage {
     const participant: Participant = {
       id,
       ...insertParticipant,
+      boardRevenue: 0,
+      mspRevenue: 0,
+      voiceSeats: 0,
+      totalDeals: 0,
+      score: 0,
       createdAt: new Date()
     };
     this.participants.set(id, participant);
@@ -59,6 +73,41 @@ export class MemStorage implements IStorage {
     const participant = await this.getParticipant(id);
     if (participant) {
       participant.score = score;
+      this.participants.set(id, participant);
+    }
+  }
+
+  async updateParticipantMetrics(
+    id: number,
+    metrics: {
+      boardRevenue?: number;
+      mspRevenue?: number;
+      voiceSeats?: number;
+      totalDeals?: number;
+    }
+  ): Promise<void> {
+    const participant = await this.getParticipant(id);
+    if (participant) {
+      if (metrics.boardRevenue !== undefined) {
+        participant.boardRevenue = metrics.boardRevenue;
+      }
+      if (metrics.mspRevenue !== undefined) {
+        participant.mspRevenue = metrics.mspRevenue;
+      }
+      if (metrics.voiceSeats !== undefined) {
+        participant.voiceSeats = metrics.voiceSeats;
+      }
+      if (metrics.totalDeals !== undefined) {
+        participant.totalDeals = metrics.totalDeals;
+      }
+
+      // Calculate total score based on metrics
+      participant.score = 
+        (participant.boardRevenue || 0) + 
+        (participant.mspRevenue || 0) + 
+        ((participant.voiceSeats || 0) * 10) + // Multiply voice seats by 10 points
+        ((participant.totalDeals || 0) * 100);  // Multiply total deals by 100 points
+
       this.participants.set(id, participant);
     }
   }

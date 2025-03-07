@@ -74,10 +74,10 @@ export function AdminDashboard() {
     },
   });
 
-  // Mutation for updating participant scores
+  // Mutation for updating participant scores (extended to handle multiple metrics)
   const updateScoreMutation = useMutation({
-    mutationFn: async ({ id, score }: { id: number; score: number }) => {
-      const res = await apiRequest("PATCH", `/api/participants/${id}/score`, { score });
+    mutationFn: async (data: { id: number; boardRevenue: number; msp: number; voiceSeats: number; totalDeals: number }) => {
+      const res = await apiRequest("PATCH", `/api/participants/${data.id}/score`, data);
       return res.json();
     },
     onSuccess: () => {
@@ -186,30 +186,73 @@ export function AdminDashboard() {
         <div>
           <h2 className="text-lg font-semibold mb-6">Award Points</h2>
           <div className="space-y-4">
+            {/* Table Header */}
+            <div className="grid grid-cols-6 gap-4 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
+              <div>Name</div>
+              <div>Board Revenue ($)</div>
+              <div>MSP ($)</div>
+              <div>Voice Seats</div>
+              <div>Total Deals</div>
+              <div>Total Score</div>
+            </div>
+            {/* Participant Rows */}
             {participants?.map((participant) => (
               <div
                 key={participant.id}
-                className="flex items-center gap-4 p-4 rounded-lg border bg-white"
+                className="grid grid-cols-6 gap-4 items-center p-4 rounded-lg border bg-white"
               >
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
-                  {participant.name.charAt(0).toUpperCase()}
-                </div>
-                <span className="flex-1 font-medium">{participant.name}</span>
                 <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    defaultValue={participant.score}
-                    className="w-24"
-                    onChange={(e) => {
-                      const newScore = parseInt(e.target.value);
-                      if (!isNaN(newScore)) {
-                        updateScoreMutation.mutate({
-                          id: participant.id,
-                          score: newScore,
-                        });
-                      }
-                    }}
-                  />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
+                    {participant.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="font-medium">{participant.name}</span>
+                </div>
+                <Input
+                  type="number"
+                  className="w-full"
+                  placeholder="0"
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value)) {
+                      updateScoreMutation.mutate({id: participant.id, boardRevenue: value, msp: participant.msp, voiceSeats: participant.voiceSeats, totalDeals: participant.totalDeals});
+                    }
+                  }}
+                />
+                <Input
+                  type="number"
+                  className="w-full"
+                  placeholder="0"
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value)) {
+                      updateScoreMutation.mutate({id: participant.id, boardRevenue: participant.boardRevenue, msp: value, voiceSeats: participant.voiceSeats, totalDeals: participant.totalDeals});
+                    }
+                  }}
+                />
+                <Input
+                  type="number"
+                  className="w-full"
+                  placeholder="0"
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value)) {
+                      updateScoreMutation.mutate({id: participant.id, boardRevenue: participant.boardRevenue, msp: participant.msp, voiceSeats: value, totalDeals: participant.totalDeals});
+                    }
+                  }}
+                />
+                <Input
+                  type="number"
+                  className="w-full"
+                  placeholder="0"
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value)) {
+                      updateScoreMutation.mutate({id: participant.id, boardRevenue: participant.boardRevenue, msp: participant.msp, voiceSeats: participant.voiceSeats, totalDeals: value});
+                    }
+                  }}
+                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{participant.score}</span>
                   <span className="text-sm text-muted-foreground">points</span>
                 </div>
               </div>
