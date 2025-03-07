@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Trophy, DollarSign, Briefcase, Phone, Target } from "lucide-react";
+import { Trophy, DollarSign, Building2, Phone, Target } from "lucide-react";
 import type { Participant } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -39,11 +39,26 @@ export default function LeaderboardPage() {
                 {/* Table Header */}
                 <div className="grid grid-cols-6 gap-4 py-3 px-6 bg-white rounded-lg shadow-sm border-b-2 border-primary/10">
                   <div className="font-semibold text-sm text-gray-600">Name</div>
-                  <div className="font-semibold text-sm text-gray-600 text-right">Board Revenue ($)</div>
-                  <div className="font-semibold text-sm text-gray-600 text-right">MSP ($)</div>
-                  <div className="font-semibold text-sm text-gray-600 text-right">Voice Seats</div>
-                  <div className="font-semibold text-sm text-gray-600 text-right">Total Deals</div>
-                  <div className="font-semibold text-sm text-gray-600 text-right">Total Score</div>
+                  <div className="font-semibold text-sm text-gray-600 text-right flex items-center justify-end gap-1">
+                    <DollarSign className="h-4 w-4" />
+                    Board Revenue
+                  </div>
+                  <div className="font-semibold text-sm text-gray-600 text-right flex items-center justify-end gap-1">
+                    <Building2 className="h-4 w-4" />
+                    MSP Revenue
+                  </div>
+                  <div className="font-semibold text-sm text-gray-600 text-right flex items-center justify-end gap-1">
+                    <Phone className="h-4 w-4" />
+                    Voice Seats
+                  </div>
+                  <div className="font-semibold text-sm text-gray-600 text-right flex items-center justify-end gap-1">
+                    <Target className="h-4 w-4" />
+                    Total Deals
+                  </div>
+                  <div className="font-semibold text-sm text-gray-600 text-right flex items-center justify-end gap-1">
+                    <Trophy className="h-4 w-4 text-primary" />
+                    Total Score
+                  </div>
                 </div>
                 {/* Participant Rows */}
                 {participants?.map((participant, index) => (
@@ -78,7 +93,13 @@ export default function LeaderboardPage() {
                     <div className="text-right font-medium">${participant.mspRevenue.toLocaleString()}</div>
                     <div className="text-right font-medium">{participant.voiceSeats.toLocaleString()}</div>
                     <div className="text-right font-medium">{participant.totalDeals.toLocaleString()}</div>
-                    <div className="text-right font-bold text-primary">{participant.score.toLocaleString()}</div>
+                    <div className="flex items-center justify-end">
+                      <div className="bg-primary/10 rounded-lg px-3 py-1">
+                        <span className="text-lg font-bold text-primary">
+                          {participant.score.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -103,7 +124,7 @@ export default function LeaderboardPage() {
                   </p>
                 </div>
                 <div className="relative pl-8">
-                  <Briefcase className="absolute left-0 top-1 h-5 w-5 text-blue-600" />
+                  <Building2 className="absolute left-0 top-1 h-5 w-5 text-blue-600" />
                   <h3 className="font-semibold text-blue-700">MSP Revenue</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Direct dollar value (1:1)
