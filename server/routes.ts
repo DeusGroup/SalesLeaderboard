@@ -3,6 +3,24 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertParticipantSchema } from "@shared/schema";
+import { randomBytes } from "crypto";
+import { join } from "path";
+import multer from "multer";
+import { mkdir } from "fs/promises";
+
+const multerStorage = multer.diskStorage({
+  destination: async function (req, file, cb) {
+    const uploadDir = join(process.cwd(), 'uploads');
+    await mkdir(uploadDir, { recursive: true });
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = randomBytes(16).toString('hex');
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  }
+});
+
+const upload = multer({ storage: multerStorage });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -45,14 +63,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/upload", upload.single('file'), (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    const url = `/uploads/${req.file.filename}`;
+    res.json({ url });
+  });
+
   app.patch("/api/participants/:id/profile", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const { id } = req.params;
-    const { name, role, department } = req.body;
+    const { name, role, department, avatarUrl } = req.body;
 
     try {
-      await storage.updateParticipantProfile(parseInt(id), { name, role, department });
+      await storage.updateParticipantProfile(parseInt(id), { 
+        name, 
+        role, 
+        department,
+        avatarUrl 
+      });
       const participant = await storage.getParticipant(parseInt(id));
       res.json(participant);
     } catch (error) {

@@ -5,6 +5,7 @@ import { z } from "zod";
 export const participants = pgTable("participants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  avatarUrl: text("avatar_url"),
   boardRevenue: integer("board_revenue").notNull().default(0),
   mspRevenue: integer("msp_revenue").notNull().default(0),
   voiceSeats: integer("voice_seats").notNull().default(0),
@@ -29,6 +30,7 @@ export const admin = pgTable("admin", {
 // Schema for participant creation/update
 export const insertParticipantSchema = createInsertSchema(participants).pick({
   name: true,
+  avatarUrl: true,
   boardRevenue: true,
   mspRevenue: true,
   voiceSeats: true,

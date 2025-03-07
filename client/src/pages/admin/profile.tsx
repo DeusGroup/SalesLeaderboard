@@ -23,6 +23,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
+import { AvatarUpload } from "@/components/avatar-upload";
 
 export function UserProfile() {
   const { id } = useParams();
@@ -38,7 +39,7 @@ export function UserProfile() {
 
   // Mutation for updating participant profile
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { name: string; role: string; department: string }) => {
+    mutationFn: async (data: { name: string; role: string; department: string; avatarUrl?: string }) => {
       const res = await apiRequest("PATCH", `/api/participants/${id}/profile`, data);
       return res.json();
     },
@@ -110,11 +111,19 @@ export function UserProfile() {
       <main className="container mx-auto py-8 px-4">
         {/* Profile Header */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center text-4xl font-bold">
-            {participant.name?.charAt(0).toUpperCase() || '?'}
+          <div className="mx-auto mb-4">
+            <AvatarUpload
+              currentAvatarUrl={participant?.avatarUrl}
+              onUploadComplete={(url) => {
+                updateProfileMutation.mutate({
+                  ...participant,
+                  avatarUrl: url,
+                });
+              }}
+            />
           </div>
-          <h2 className="text-2xl font-bold mb-1">{participant.name}</h2>
-          <p className="text-muted-foreground mb-4">{participant.role || 'Sales Representative'}</p>
+          <h2 className="text-2xl font-bold mb-1">{participant?.name}</h2>
+          <p className="text-muted-foreground mb-4">{participant?.role || 'Sales Representative'}</p>
           <div className="flex justify-center gap-4 mb-6">
             <Button
               variant="outline"
