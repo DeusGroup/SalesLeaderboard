@@ -7,7 +7,7 @@ const MemoryStore = createMemoryStore(session);
 interface LeaderboardEntry {
   userId: number;
   displayName: string;
-  totalAmount: number;
+  totalScore: number;
 }
 
 export interface IStorage {
@@ -17,6 +17,7 @@ export interface IStorage {
   createSale(userId: number, sale: InsertSale): Promise<Sale>;
   getUserSales(userId: number): Promise<Sale[]>;
   getLeaderboard(): Promise<LeaderboardEntry[]>;
+  updateUserScore(userId: number, scoreToAdd: number): Promise<void>;
   sessionStore: session.Store;
 }
 
@@ -49,9 +50,21 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      totalScore: 0
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUserScore(userId: number, scoreToAdd: number): Promise<void> {
+    const user = await this.getUser(userId);
+    if (user) {
+      user.totalScore += scoreToAdd;
+      this.users.set(userId, user);
+    }
   }
 
   async createSale(userId: number, insertSale: InsertSale): Promise<Sale> {
@@ -60,42 +73,32 @@ export class MemStorage implements IStorage {
       id,
       userId,
       ...insertSale,
-      date: new Date(),
+      createdAt: new Date(),
     };
     this.sales.set(id, sale);
+
+    // Update the user's total score
+    await this.updateUserScore(userId, insertSale.score);
+
     return sale;
   }
 
   async getUserSales(userId: number): Promise<Sale[]> {
-    return Array.from(this.sales.values()).filter(
-      (sale) => sale.userId === userId,
-    );
+    return Array.from(this.sales.values())
+      .filter((sale) => sale.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
-    const salesByUser = new Map<number, number>();
-    
-    // Calculate total sales per user
-    for (const sale of this.sales.values()) {
-      const currentTotal = salesByUser.get(sale.userId) || 0;
-      salesByUser.set(sale.userId, currentTotal + sale.amount);
-    }
+    const entries: LeaderboardEntry[] = Array.from(this.users.values())
+      .map(user => ({
+        userId: user.id,
+        displayName: user.displayName,
+        totalScore: user.totalScore
+      }))
+      .sort((a, b) => b.totalScore - a.totalScore);
 
-    // Create leaderboard entries
-    const entries: LeaderboardEntry[] = [];
-    for (const [userId, totalAmount] of salesByUser) {
-      const user = await this.getUser(userId);
-      if (user) {
-        entries.push({
-          userId,
-          displayName: user.displayName,
-          totalAmount,
-        });
-      }
-    }
-
-    // Sort by total amount descending
-    return entries.sort((a, b) => b.totalAmount - a.totalAmount);
+    return entries;
   }
 }
 

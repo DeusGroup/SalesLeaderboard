@@ -7,26 +7,36 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
+  totalScore: integer("total_score").notNull().default(0),
 });
 
 export const sales = pgTable("sales", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  amount: integer("amount").notNull(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  score: integer("score").notNull(),
   description: text("description").notNull(),
-  date: timestamp("date").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Schema for user registration/creation
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   displayName: true,
 });
 
-export const insertSaleSchema = createInsertSchema(sales).pick({
-  amount: true,
-  description: true,
-});
+// Schema for adding a new sale
+export const insertSaleSchema = createInsertSchema(sales)
+  .pick({
+    score: true,
+    description: true,
+  })
+  .extend({
+    score: z.number().min(1, "Score must be at least 1"),
+    description: z.string().min(1, "Description is required"),
+  });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;

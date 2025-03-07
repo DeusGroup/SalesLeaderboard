@@ -21,7 +21,7 @@ import { Loader2, LogOut, Trophy } from "lucide-react";
 interface LeaderboardEntry {
   userId: number;
   displayName: string;
-  totalAmount: number;
+  totalScore: number;
 }
 
 export default function HomePage() {
@@ -42,13 +42,13 @@ export default function HomePage() {
   const form = useForm({
     resolver: zodResolver(insertSaleSchema),
     defaultValues: {
-      amount: 0,
+      score: 0,
       description: "",
     },
   });
 
   const createSaleMutation = useMutation({
-    mutationFn: async (data: { amount: number; description: string }) => {
+    mutationFn: async (data: { score: number; description: string }) => {
       const res = await apiRequest("POST", "/api/sales", data);
       return res.json();
     },
@@ -58,7 +58,14 @@ export default function HomePage() {
       form.reset();
       toast({
         title: "Success!",
-        description: "Your sale has been recorded",
+        description: "Your score has been recorded",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
@@ -92,8 +99,8 @@ export default function HomePage() {
           <div className="space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle>Record New Sale</CardTitle>
-                <CardDescription>Add your latest sale to the board</CardDescription>
+                <CardTitle>Record New Score</CardTitle>
+                <CardDescription>Add your latest achievement</CardDescription>
               </CardHeader>
               <CardContent>
                 <form
@@ -103,16 +110,16 @@ export default function HomePage() {
                   className="space-y-4"
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="amount">Amount ($)</Label>
+                    <Label htmlFor="score">Score</Label>
                     <Input
-                      id="amount"
+                      id="score"
                       type="number"
                       className="bg-white"
-                      {...form.register("amount", { valueAsNumber: true })}
+                      {...form.register("score", { valueAsNumber: true })}
                     />
-                    {form.formState.errors.amount && (
+                    {form.formState.errors.score && (
                       <p className="text-sm text-destructive">
-                        {form.formState.errors.amount.message}
+                        {form.formState.errors.score.message}
                       </p>
                     )}
                   </div>
@@ -137,7 +144,7 @@ export default function HomePage() {
                     {createSaleMutation.isPending && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Submit Sale
+                    Submit Score
                   </Button>
                 </form>
               </CardContent>
@@ -145,7 +152,7 @@ export default function HomePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Your Sales History</CardTitle>
+                <CardTitle>Your History</CardTitle>
                 <CardDescription>Track your performance</CardDescription>
               </CardHeader>
               <CardContent>
@@ -155,7 +162,7 @@ export default function HomePage() {
                   </div>
                 ) : sales?.length === 0 ? (
                   <p className="text-center text-muted-foreground py-4">
-                    No sales recorded yet
+                    No scores recorded yet
                   </p>
                 ) : (
                   <div className="space-y-4">
@@ -167,10 +174,10 @@ export default function HomePage() {
                         <div>
                           <p className="font-medium">{sale.description}</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(sale.date).toLocaleDateString()}
+                            {new Date(sale.createdAt).toLocaleDateString()}
                           </p>
                         </div>
-                        <p className="font-bold text-primary">${sale.amount.toLocaleString()}</p>
+                        <p className="font-bold text-primary">Score: {sale.score}</p>
                       </div>
                     ))}
                   </div>
@@ -185,7 +192,7 @@ export default function HomePage() {
                 <Trophy className="h-5 w-5 text-primary" />
                 <CardTitle>Leaderboard</CardTitle>
               </div>
-              <CardDescription>Top sales performers</CardDescription>
+              <CardDescription>Top performers</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingLeaderboard ? (
@@ -194,7 +201,7 @@ export default function HomePage() {
                 </div>
               ) : leaderboard?.length === 0 ? (
                 <p className="text-center text-muted-foreground py-4">
-                  No sales recorded yet
+                  No scores recorded yet
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -219,7 +226,7 @@ export default function HomePage() {
                       <div className="flex-1">
                         <p className="font-medium">{entry.displayName}</p>
                         <p className="text-sm text-muted-foreground">
-                          Total sales: ${entry.totalAmount.toLocaleString()}
+                          Total score: {entry.totalScore}
                         </p>
                       </div>
                     </div>

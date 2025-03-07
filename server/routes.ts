@@ -21,13 +21,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/sales", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const saleData = insertSaleSchema.parse(req.body);
       const sale = await storage.createSale(req.user.id, saleData);
       res.status(201).json(sale);
     } catch (error) {
-      res.status(400).json({ error: "Invalid sale data" });
+      res.status(400).json({ 
+        error: "Invalid sale data",
+        details: error instanceof Error ? error.message : undefined
+      });
     }
   });
 
