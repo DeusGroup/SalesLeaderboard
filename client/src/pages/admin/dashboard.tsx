@@ -74,17 +74,23 @@ export function AdminDashboard() {
     },
   });
 
-  // Mutation for updating participant scores (extended to handle multiple metrics)
-  const updateScoreMutation = useMutation({
-    mutationFn: async (data: { id: number; boardRevenue: number; msp: number; voiceSeats: number; totalDeals: number }) => {
-      const res = await apiRequest("PATCH", `/api/participants/${data.id}/score`, data);
+  // Mutation for updating participant metrics
+  const updateMetricsMutation = useMutation({
+    mutationFn: async (data: { 
+      id: number; 
+      boardRevenue?: number; 
+      mspRevenue?: number; 
+      voiceSeats?: number; 
+      totalDeals?: number; 
+    }) => {
+      const res = await apiRequest("PATCH", `/api/participants/${data.id}/metrics`, data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
       toast({
         title: "Success",
-        description: "Score updated successfully",
+        description: "Metrics updated successfully",
       });
     },
     onError: (error: Error) => {
@@ -211,10 +217,14 @@ export function AdminDashboard() {
                   type="number"
                   className="w-full"
                   placeholder="0"
+                  defaultValue={participant.boardRevenue}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
                     if (!isNaN(value)) {
-                      updateScoreMutation.mutate({id: participant.id, boardRevenue: value, msp: participant.msp, voiceSeats: participant.voiceSeats, totalDeals: participant.totalDeals});
+                      updateMetricsMutation.mutate({
+                        id: participant.id,
+                        boardRevenue: value
+                      });
                     }
                   }}
                 />
@@ -222,10 +232,14 @@ export function AdminDashboard() {
                   type="number"
                   className="w-full"
                   placeholder="0"
+                  defaultValue={participant.mspRevenue}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
                     if (!isNaN(value)) {
-                      updateScoreMutation.mutate({id: participant.id, boardRevenue: participant.boardRevenue, msp: value, voiceSeats: participant.voiceSeats, totalDeals: participant.totalDeals});
+                      updateMetricsMutation.mutate({
+                        id: participant.id,
+                        mspRevenue: value
+                      });
                     }
                   }}
                 />
@@ -233,10 +247,14 @@ export function AdminDashboard() {
                   type="number"
                   className="w-full"
                   placeholder="0"
+                  defaultValue={participant.voiceSeats}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
                     if (!isNaN(value)) {
-                      updateScoreMutation.mutate({id: participant.id, boardRevenue: participant.boardRevenue, msp: participant.msp, voiceSeats: value, totalDeals: participant.totalDeals});
+                      updateMetricsMutation.mutate({
+                        id: participant.id,
+                        voiceSeats: value
+                      });
                     }
                   }}
                 />
@@ -244,10 +262,14 @@ export function AdminDashboard() {
                   type="number"
                   className="w-full"
                   placeholder="0"
+                  defaultValue={participant.totalDeals}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
                     if (!isNaN(value)) {
-                      updateScoreMutation.mutate({id: participant.id, boardRevenue: participant.boardRevenue, msp: participant.msp, voiceSeats: participant.voiceSeats, totalDeals: value});
+                      updateMetricsMutation.mutate({
+                        id: participant.id,
+                        totalDeals: value
+                      });
                     }
                   }}
                 />
