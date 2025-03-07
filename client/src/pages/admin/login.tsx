@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (admin) {
-      setLocation("/admin");
+      setLocation("/admin/dashboard");
     }
   }, [admin, setLocation]);
 

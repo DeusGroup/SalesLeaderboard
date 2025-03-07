@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-export default function AdminDashboard() {
+export function AdminDashboard() {
   const { logoutMutation } = useAuth();
   const { toast } = useToast();
 
