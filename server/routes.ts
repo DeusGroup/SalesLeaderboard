@@ -49,10 +49,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const { id } = req.params;
-    const { name, role } = req.body;
+    const { name, role, department } = req.body;
 
     try {
-      await storage.updateParticipantProfile(parseInt(id), { name, role });
+      await storage.updateParticipantProfile(parseInt(id), { name, role, department });
       const participant = await storage.getParticipant(parseInt(id));
       res.json(participant);
     } catch (error) {

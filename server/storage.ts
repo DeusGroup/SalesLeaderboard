@@ -11,7 +11,7 @@ export interface IStorage {
   getParticipant(id: number): Promise<Participant | undefined>;
   getParticipantsByScore(): Promise<Participant[]>;
   createParticipant(participant: InsertParticipant): Promise<Participant>;
-  updateParticipantProfile(id: number, data: { name: string; role: string }): Promise<void>;
+  updateParticipantProfile(id: number, data: { name: string; role: string; department: string }): Promise<void>;
   updateParticipantMetrics(
     id: number,
     metrics: {
@@ -50,7 +50,7 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async updateParticipantProfile(id: number, data: { name: string; role: string }): Promise<void> {
+  async updateParticipantProfile(id: number, data: { name: string; role: string; department: string }): Promise<void> {
     await db
       .update(participants)
       .set(data)

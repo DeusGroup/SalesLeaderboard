@@ -11,6 +11,7 @@ export const participants = pgTable("participants", {
   totalDeals: integer("total_deals").notNull().default(0),
   score: integer("score").notNull().default(0),
   role: text("role").default("Sales Representative"),
+  department: text("department").default("IT"),
   performanceHistory: json("performance_history").$type<Array<{
     timestamp: string;
     score: number;
@@ -33,6 +34,7 @@ export const insertParticipantSchema = createInsertSchema(participants).pick({
   voiceSeats: true,
   totalDeals: true,
   role: true,
+  department: true,
 });
 
 // Schema for admin login
