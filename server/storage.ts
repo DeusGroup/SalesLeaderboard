@@ -71,16 +71,18 @@ export class DatabaseStorage implements IStorage {
 
     // Update the metrics
     const updatedMetrics = {
-      ...participant,
-      ...metrics,
+      boardRevenue: metrics.boardRevenue ?? participant.boardRevenue,
+      mspRevenue: metrics.mspRevenue ?? participant.mspRevenue,
+      voiceSeats: metrics.voiceSeats ?? participant.voiceSeats,
+      totalDeals: metrics.totalDeals ?? participant.totalDeals,
     };
 
-    // Calculate new score based on the dynamic point system
+    // Calculate new score based on the point system
     const score = 
-      (updatedMetrics.boardRevenue || 0) + // Direct value (1:1)
-      (updatedMetrics.mspRevenue || 0) +   // Direct value (1:1)
-      ((updatedMetrics.voiceSeats || 0) * 10) + // 10 points per seat
-      ((updatedMetrics.totalDeals || 0) * 100); // 100 points per deal
+      Number(updatedMetrics.boardRevenue) + // Direct value (1:1)
+      Number(updatedMetrics.mspRevenue) +   // Direct value (1:1)
+      (Number(updatedMetrics.voiceSeats) * 10) + // 10 points per seat
+      (Number(updatedMetrics.totalDeals) * 100); // 100 points per deal
 
     // Add to performance history with detailed description
     const performanceHistory = [
@@ -88,14 +90,22 @@ export class DatabaseStorage implements IStorage {
       {
         timestamp: new Date().toISOString(),
         score,
-        description: `Score updated: Board Revenue $${updatedMetrics.boardRevenue}, MSP Revenue $${updatedMetrics.mspRevenue}, Voice Seats ${updatedMetrics.voiceSeats}, Total Deals ${updatedMetrics.totalDeals}`,
+        description: `Points Update:
+          Board Revenue: $${updatedMetrics.boardRevenue} (+${updatedMetrics.boardRevenue}),
+          MSP Revenue: $${updatedMetrics.mspRevenue} (+${updatedMetrics.mspRevenue}),
+          Voice Seats: ${updatedMetrics.voiceSeats} (+${updatedMetrics.voiceSeats * 10}),
+          Total Deals: ${updatedMetrics.totalDeals} (+${updatedMetrics.totalDeals * 100})
+        `.replace(/\s+/g, ' ').trim(),
       },
     ];
 
     await db
       .update(participants)
       .set({
-        ...metrics,
+        boardRevenue: updatedMetrics.boardRevenue,
+        mspRevenue: updatedMetrics.mspRevenue,
+        voiceSeats: updatedMetrics.voiceSeats,
+        totalDeals: updatedMetrics.totalDeals,
         score,
         performanceHistory,
       })
