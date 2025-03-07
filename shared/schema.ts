@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -10,6 +10,12 @@ export const participants = pgTable("participants", {
   voiceSeats: integer("voice_seats").notNull().default(0),
   totalDeals: integer("total_deals").notNull().default(0),
   score: integer("score").notNull().default(0),
+  role: text("role").default("Sales Representative"),
+  performanceHistory: json("performance_history").$type<Array<{
+    timestamp: string;
+    score: number;
+    description: string;
+  }>>().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -26,7 +32,7 @@ export const insertParticipantSchema = createInsertSchema(participants).pick({
   mspRevenue: true,
   voiceSeats: true,
   totalDeals: true,
-  score: true,
+  role: true,
 });
 
 // Schema for admin login

@@ -58,6 +58,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/participants/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const { id } = req.params;
+    try {
+      await storage.deleteParticipant(parseInt(id));
+      res.sendStatus(200);
+    } catch (error) {
+      res.status(400).json({
+        error: "Failed to delete participant",
+        details: error instanceof Error ? error.message : undefined
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

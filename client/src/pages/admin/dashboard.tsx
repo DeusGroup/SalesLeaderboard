@@ -6,7 +6,7 @@ import { insertParticipantSchema } from "@shared/schema";
 import type { Participant } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trophy, Plus } from "lucide-react";
+import { Trophy, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -63,6 +63,27 @@ export function AdminDashboard() {
       toast({
         title: "Success",
         description: "Participant added successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for deleting participants
+  const deleteParticipantMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/participants/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
+      toast({
+        title: "Success",
+        description: "Participant deleted successfully",
       });
     },
     onError: (error: Error) => {
@@ -205,7 +226,7 @@ export function AdminDashboard() {
             {participants?.map((participant) => (
               <div
                 key={participant.id}
-                className="grid grid-cols-6 gap-4 items-center p-4 rounded-lg border bg-white"
+                className="grid grid-cols-7 gap-4 items-center p-4 rounded-lg border bg-white"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
@@ -277,6 +298,18 @@ export function AdminDashboard() {
                   <span className="text-sm font-medium">{participant.score}</span>
                   <span className="text-sm text-muted-foreground">points</span>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    if (confirm(`Are you sure you want to delete ${participant.name}?`)) {
+                      deleteParticipantMutation.mutate(participant.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             ))}
           </div>

@@ -1,14 +1,16 @@
-import { InsertParticipant, Participant, Admin } from "@shared/schema";
+import { InsertParticipant, Participant, Admin, participants, admin } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   getParticipant(id: number): Promise<Participant | undefined>;
   getParticipantsByScore(): Promise<Participant[]>;
   createParticipant(participant: InsertParticipant): Promise<Participant>;
-  updateParticipantScore(id: number, score: number): Promise<void>;
   updateParticipantMetrics(
     id: number,
     metrics: {
@@ -18,63 +20,33 @@ export interface IStorage {
       totalDeals?: number;
     }
   ): Promise<void>;
+  deleteParticipant(id: number): Promise<void>;
   getAdminByUsername(username: string): Promise<Admin | undefined>;
   sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private participants: Map<number, Participant>;
-  private admins: Map<number, Admin>;
-  private currentParticipantId: number;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.participants = new Map();
-    this.admins = new Map();
-    this.currentParticipantId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
-    });
-
-    // Add default admin account
-    this.admins.set(1, {
-      id: 1,
-      username: "admin",
-      password: "Welcome1", // Updated password
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getParticipant(id: number): Promise<Participant | undefined> {
-    return this.participants.get(id);
-  }
-
-  async getParticipantsByScore(): Promise<Participant[]> {
-    return Array.from(this.participants.values())
-      .sort((a, b) => b.score - a.score);
-  }
-
-  async createParticipant(insertParticipant: InsertParticipant): Promise<Participant> {
-    const id = this.currentParticipantId++;
-    const participant: Participant = {
-      id,
-      ...insertParticipant,
-      boardRevenue: 0,
-      mspRevenue: 0,
-      voiceSeats: 0,
-      totalDeals: 0,
-      score: 0,
-      createdAt: new Date()
-    };
-    this.participants.set(id, participant);
+    const [participant] = await db.select().from(participants).where(eq(participants.id, id));
     return participant;
   }
 
-  async updateParticipantScore(id: number, score: number): Promise<void> {
-    const participant = await this.getParticipant(id);
-    if (participant) {
-      participant.score = score;
-      this.participants.set(id, participant);
-    }
+  async getParticipantsByScore(): Promise<Participant[]> {
+    return db.select().from(participants).orderBy(participants.score);
+  }
+
+  async createParticipant(participant: InsertParticipant): Promise<Participant> {
+    const [created] = await db.insert(participants).values(participant).returning();
+    return created;
   }
 
   async updateParticipantMetrics(
@@ -87,36 +59,52 @@ export class MemStorage implements IStorage {
     }
   ): Promise<void> {
     const participant = await this.getParticipant(id);
-    if (participant) {
-      if (metrics.boardRevenue !== undefined) {
-        participant.boardRevenue = metrics.boardRevenue;
-      }
-      if (metrics.mspRevenue !== undefined) {
-        participant.mspRevenue = metrics.mspRevenue;
-      }
-      if (metrics.voiceSeats !== undefined) {
-        participant.voiceSeats = metrics.voiceSeats;
-      }
-      if (metrics.totalDeals !== undefined) {
-        participant.totalDeals = metrics.totalDeals;
-      }
+    if (!participant) return;
 
-      // Calculate total score based on metrics
-      participant.score = 
-        (participant.boardRevenue || 0) + 
-        (participant.mspRevenue || 0) + 
-        ((participant.voiceSeats || 0) * 10) + // Multiply voice seats by 10 points
-        ((participant.totalDeals || 0) * 100);  // Multiply total deals by 100 points
+    // Update the metrics
+    const updatedMetrics = {
+      ...participant,
+      ...metrics,
+    };
 
-      this.participants.set(id, participant);
-    }
+    // Calculate new score
+    const score = 
+      (updatedMetrics.boardRevenue || 0) +
+      (updatedMetrics.mspRevenue || 0) +
+      ((updatedMetrics.voiceSeats || 0) * 10) +
+      ((updatedMetrics.totalDeals || 0) * 100);
+
+    // Add to performance history
+    const performanceHistory = [
+      ...(participant.performanceHistory || []),
+      {
+        timestamp: new Date().toISOString(),
+        score,
+        description: `Score updated to ${score}`,
+      },
+    ];
+
+    await db
+      .update(participants)
+      .set({
+        ...metrics,
+        score,
+        performanceHistory,
+      })
+      .where(eq(participants.id, id));
+  }
+
+  async deleteParticipant(id: number): Promise<void> {
+    await db.delete(participants).where(eq(participants.id, id));
   }
 
   async getAdminByUsername(username: string): Promise<Admin | undefined> {
-    return Array.from(this.admins.values()).find(
-      (admin) => admin.username === username
-    );
+    const [foundAdmin] = await db
+      .select()
+      .from(admin)
+      .where(eq(admin.username, username));
+    return foundAdmin;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
