@@ -148,13 +148,13 @@ export default function LeaderboardPage() {
                   <Target className="absolute left-0 top-1 h-5 w-5 text-[#00B140]" />
                   <h3 className="font-semibold text-[#1B3B6B]">Total Deals</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    100 points per deal
+                    50 points per deal
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t">
                   <h4 className="font-medium text-sm mb-2">Total Score Formula:</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Board Revenue + (MSP Revenue × 2) + (Voice Seats × 10) + (Total Deals × 100)
+                    Board Revenue + (MSP Revenue × 2) + (Voice Seats × 10) + (Total Deals × 50)
                   </p>
                 </div>
               </div>
