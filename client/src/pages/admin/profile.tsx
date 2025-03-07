@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Participant } from "@shared/schema";
 import { Trophy, PenSquare, Trash2 } from "lucide-react";
@@ -25,12 +25,22 @@ import {
 
 export function UserProfile() {
   const { id } = useParams();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
   // Query participant data
   const { data: participant, isLoading } = useQuery<Participant>({
     queryKey: ["/api/participants", id],
+    retry: false, // Don't retry on failure
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to load participant data",
+        variant: "destructive",
+      });
+      setLocation("/admin/dashboard");
+    },
   });
 
   // Mutation for updating participant
@@ -57,11 +67,11 @@ export function UserProfile() {
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   if (!participant) {
-    return <div>User not found</div>;
+    return <div className="flex items-center justify-center min-h-screen">Participant not found</div>;
   }
 
   const performanceData = participant.performanceHistory?.map((entry) => ({
@@ -77,11 +87,9 @@ export function UserProfile() {
             <Trophy className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold">IT Incentive</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => window.location.href="/admin/dashboard"}>
-              Back to Dashboard
-            </Button>
-          </div>
+          <Button variant="ghost" onClick={() => setLocation("/admin/dashboard")}>
+            Back to Dashboard
+          </Button>
         </div>
       </header>
 
@@ -90,15 +98,15 @@ export function UserProfile() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold">
-                {participant.name.charAt(0).toUpperCase()}
+                {participant.name?.charAt(0).toUpperCase() || '?'}
               </div>
               <div>
                 <CardTitle className="text-2xl">{participant.name}</CardTitle>
-                <p className="text-muted-foreground">{participant.role}</p>
+                <p className="text-muted-foreground">{participant.role || 'Sales Representative'}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <h2 className="text-3xl font-bold text-primary">{participant.score}</h2>
+              <h2 className="text-3xl font-bold text-primary">{participant.score || 0}</h2>
               <span className="text-muted-foreground">points</span>
             </div>
           </CardHeader>
