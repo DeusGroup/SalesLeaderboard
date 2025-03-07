@@ -2,33 +2,52 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertSaleSchema } from "@shared/schema";
+import { insertParticipantSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
+  // Public endpoint for the leaderboard
   app.get("/api/leaderboard", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const leaderboard = await storage.getLeaderboard();
-    res.json(leaderboard);
+    const participants = await storage.getParticipantsByScore();
+    res.json(participants);
   });
 
-  app.get("/api/sales", async (req, res) => {
+  // Admin endpoints - require authentication
+  app.get("/api/participants", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const sales = await storage.getUserSales(req.user.id);
-    res.json(sales);
+    const participants = await storage.getParticipantsByScore();
+    res.json(participants);
   });
 
-  app.post("/api/sales", async (req, res) => {
+  app.post("/api/participants", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const saleData = insertSaleSchema.parse(req.body);
-      const sale = await storage.createSale(req.user.id, saleData);
-      res.status(201).json(sale);
+      const participantData = insertParticipantSchema.parse(req.body);
+      const participant = await storage.createParticipant(participantData);
+      res.status(201).json(participant);
     } catch (error) {
-      res.status(400).json({ 
-        error: "Invalid sale data",
+      res.status(400).json({
+        error: "Invalid participant data",
+        details: error instanceof Error ? error.message : undefined
+      });
+    }
+  });
+
+  app.patch("/api/participants/:id/score", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const { id } = req.params;
+    const { score } = req.body;
+
+    try {
+      await storage.updateParticipantScore(parseInt(id), score);
+      const participant = await storage.getParticipant(parseInt(id));
+      res.json(participant);
+    } catch (error) {
+      res.status(400).json({
+        error: "Failed to update score",
         details: error instanceof Error ? error.message : undefined
       });
     }
