@@ -79,9 +79,10 @@ export class DatabaseStorage implements IStorage {
       totalDeals: metrics.totalDeals ?? participant.totalDeals,
     };
 
+    // Updated score calculation to use 2x multiplier for MSP Revenue
     const score =
       Number(updatedMetrics.boardRevenue) +
-      Number(updatedMetrics.mspRevenue) +
+      (Number(updatedMetrics.mspRevenue) * 2) + // Changed to multiply by 2
       (Number(updatedMetrics.voiceSeats) * 10) +
       (Number(updatedMetrics.totalDeals) * 100);
 
@@ -92,7 +93,7 @@ export class DatabaseStorage implements IStorage {
         score,
         description: `Points Update:
           Board Revenue: $${updatedMetrics.boardRevenue} (+${updatedMetrics.boardRevenue}),
-          MSP Revenue: $${updatedMetrics.mspRevenue} (+${updatedMetrics.mspRevenue}),
+          MSP Revenue: $${updatedMetrics.mspRevenue} (+${updatedMetrics.mspRevenue * 2}),
           Voice Seats: ${updatedMetrics.voiceSeats} (+${updatedMetrics.voiceSeats * 10}),
           Total Deals: ${updatedMetrics.totalDeals} (+${updatedMetrics.totalDeals * 100})
         `.replace(/\s+/g, ' ').trim(),

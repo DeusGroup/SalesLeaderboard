@@ -134,7 +134,7 @@ export default function LeaderboardPage() {
                   <Building2 className="absolute left-0 top-1 h-5 w-5 text-[#00B140]" />
                   <h3 className="font-semibold text-[#1B3B6B]">MSP Revenue</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Direct dollar value (1:1)
+                    Double points (2:1 ratio)
                   </p>
                 </div>
                 <div className="relative pl-8">
@@ -154,7 +154,7 @@ export default function LeaderboardPage() {
                 <div className="mt-6 pt-4 border-t">
                   <h4 className="font-medium text-sm mb-2">Total Score Formula:</h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Board Revenue + MSP Revenue + (Voice Seats × 10) + (Total Deals × 100)
+                    Board Revenue + (MSP Revenue × 2) + (Voice Seats × 10) + (Total Deals × 100)
                   </p>
                 </div>
               </div>
