@@ -14,7 +14,11 @@ export default function LeaderboardPage() {
       <header className="border-b bg-[#1B3B6B] text-white">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-4">
-            <img src="/CCP.jpg" alt="CCP Logo" className="h-10 w-auto" />
+            <img 
+              src="/CCP.jpg" 
+              alt="CCP Office Technology Solutions" 
+              className="h-8 w-auto object-contain"
+            />
             <h1 className="text-2xl font-bold text-white">Sales Board</h1>
           </div>
           <Link href="/admin/login">
