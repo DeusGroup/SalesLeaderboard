@@ -11,7 +11,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <header className="border-b bg-[#2563EB] text-white shadow-sm">
+      <header className="border-b bg-[#1B3B6B] text-white shadow-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-4">
             <img 
