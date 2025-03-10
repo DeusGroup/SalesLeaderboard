@@ -19,6 +19,10 @@ export interface IStorage {
       mspRevenue?: number;
       voiceSeats?: number;
       totalDeals?: number;
+      boardRevenueGoal?: number;
+      mspRevenueGoal?: number;
+      voiceSeatsGoal?: number;
+      totalDealsGoal?: number;
     }
   ): Promise<void>;
   deleteParticipant(id: number): Promise<void>;
@@ -67,6 +71,10 @@ export class DatabaseStorage implements IStorage {
       mspRevenue?: number;
       voiceSeats?: number;
       totalDeals?: number;
+      boardRevenueGoal?: number;
+      mspRevenueGoal?: number;
+      voiceSeatsGoal?: number;
+      totalDealsGoal?: number;
     }
   ): Promise<void> {
     const participant = await this.getParticipant(id);
@@ -77,14 +85,18 @@ export class DatabaseStorage implements IStorage {
       mspRevenue: metrics.mspRevenue ?? participant.mspRevenue,
       voiceSeats: metrics.voiceSeats ?? participant.voiceSeats,
       totalDeals: metrics.totalDeals ?? participant.totalDeals,
+      boardRevenueGoal: metrics.boardRevenueGoal ?? participant.boardRevenueGoal,
+      mspRevenueGoal: metrics.mspRevenueGoal ?? participant.mspRevenueGoal,
+      voiceSeatsGoal: metrics.voiceSeatsGoal ?? participant.voiceSeatsGoal,
+      totalDealsGoal: metrics.totalDealsGoal ?? participant.totalDealsGoal,
     };
 
     // Updated score calculation to use 2x multiplier for MSP Revenue
     const score =
       Number(updatedMetrics.boardRevenue) +
-      (Number(updatedMetrics.mspRevenue) * 2) + // Changed to multiply by 2
+      (Number(updatedMetrics.mspRevenue) * 2) +
       (Number(updatedMetrics.voiceSeats) * 10) +
-      (Number(updatedMetrics.totalDeals) * 50); // Changed from 100 to 50
+      (Number(updatedMetrics.totalDeals) * 50);
 
     const performanceHistory = [
       ...(participant.performanceHistory || []),
@@ -103,10 +115,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(participants)
       .set({
-        boardRevenue: updatedMetrics.boardRevenue,
-        mspRevenue: updatedMetrics.mspRevenue,
-        voiceSeats: updatedMetrics.voiceSeats,
-        totalDeals: updatedMetrics.totalDeals,
+        ...updatedMetrics,
         score,
         performanceHistory,
       })

@@ -3,11 +3,19 @@ import { useQuery } from "@tanstack/react-query";
 import { Trophy, DollarSign, Building2, Phone, Target } from "lucide-react";
 import type { Participant } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 export default function LeaderboardPage() {
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/leaderboard"],
   });
+
+  // Calculate progress percentage safely
+  const calculateProgress = (current: number, goal: number) => {
+    if (!goal) return 0;
+    const progress = (current / goal) * 100;
+    return Math.min(100, Math.max(0, progress));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -41,26 +49,9 @@ export default function LeaderboardPage() {
             ) : (
               <div className="space-y-4 min-w-[800px] lg:min-w-0">
                 {/* Table Header */}
-                <div className="grid grid-cols-6 gap-4 py-3 px-6 bg-white rounded-lg shadow-sm border-b-2 border-[#00B140]/10">
+                <div className="grid grid-cols-5 gap-4 py-3 px-6 bg-white rounded-lg shadow-sm border-b-2 border-[#00B140]/10">
                   <div className="font-semibold text-sm text-[#1B3B6B]">Name</div>
-                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="hidden md:inline">Board Revenue</span>
-                    <span className="md:hidden">Board Rev.</span>
-                  </div>
-                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
-                    <Building2 className="h-4 w-4" />
-                    <span className="hidden md:inline">MSP Revenue</span>
-                    <span className="md:hidden">MSP Rev.</span>
-                  </div>
-                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
-                    <Phone className="h-4 w-4" />
-                    <span>Voice Seats</span>
-                  </div>
-                  <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
-                    <Target className="h-4 w-4" />
-                    <span>Total Deals</span>
-                  </div>
+                  <div className="font-semibold text-sm text-[#1B3B6B] text-center col-span-3">Performance Metrics</div>
                   <div className="font-semibold text-sm text-[#1B3B6B] text-center flex items-center justify-center gap-1">
                     <Trophy className="h-4 w-4 text-[#00B140]" />
                     <span>Total Score</span>
@@ -71,13 +62,14 @@ export default function LeaderboardPage() {
                 {participants?.map((participant, index) => (
                   <div
                     key={participant.id}
-                    className={`grid grid-cols-6 gap-4 items-center p-4 rounded-lg bg-white shadow-sm border ${
+                    className={`p-4 rounded-lg bg-white shadow-sm border ${
                       index === 0 ? 'border-[#00B140] bg-green-50' :
                       index === 1 ? 'border-gray-400 bg-gray-50' :
                       index === 2 ? 'border-[#1B3B6B] bg-blue-50' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-2">
+                    {/* User Info */}
+                    <div className="flex items-center gap-2 mb-4">
                       {participant.avatarUrl ? (
                         <img
                           src={participant.avatarUrl}
@@ -96,11 +88,72 @@ export default function LeaderboardPage() {
                       )}
                       <span className="font-medium text-sm md:text-base">{participant.name}</span>
                     </div>
-                    <div className="text-center font-medium text-sm md:text-base">${participant.boardRevenue.toLocaleString()}</div>
-                    <div className="text-center font-medium text-sm md:text-base">${participant.mspRevenue.toLocaleString()}</div>
-                    <div className="text-center font-medium text-sm md:text-base">{participant.voiceSeats.toLocaleString()}</div>
-                    <div className="text-center font-medium text-sm md:text-base">{participant.totalDeals.toLocaleString()}</div>
-                    <div className="flex items-center justify-center">
+
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      {/* Board Revenue */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Board Revenue</span>
+                          <span className="font-medium">${participant.boardRevenue.toLocaleString()}</span>
+                        </div>
+                        <Progress 
+                          value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)} 
+                          className="h-2"
+                        />
+                        <div className="text-xs text-muted-foreground text-right">
+                          Goal: ${participant.boardRevenueGoal.toLocaleString()}
+                        </div>
+                      </div>
+
+                      {/* MSP Revenue */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">MSP Revenue</span>
+                          <span className="font-medium">${participant.mspRevenue.toLocaleString()}</span>
+                        </div>
+                        <Progress 
+                          value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)} 
+                          className="h-2"
+                        />
+                        <div className="text-xs text-muted-foreground text-right">
+                          Goal: ${participant.mspRevenueGoal.toLocaleString()}
+                        </div>
+                      </div>
+
+                      {/* Voice Seats */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Voice Seats</span>
+                          <span className="font-medium">{participant.voiceSeats.toLocaleString()}</span>
+                        </div>
+                        <Progress 
+                          value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)} 
+                          className="h-2"
+                        />
+                        <div className="text-xs text-muted-foreground text-right">
+                          Goal: {participant.voiceSeatsGoal.toLocaleString()}
+                        </div>
+                      </div>
+
+                      {/* Total Deals */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Total Deals</span>
+                          <span className="font-medium">{participant.totalDeals.toLocaleString()}</span>
+                        </div>
+                        <Progress 
+                          value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)} 
+                          className="h-2"
+                        />
+                        <div className="text-xs text-muted-foreground text-right">
+                          Goal: {participant.totalDealsGoal.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Score */}
+                    <div className="flex justify-end mt-2">
                       <div className="bg-[#00B140]/10 rounded-lg px-3 py-1">
                         <span className="text-base md:text-lg font-bold text-[#00B140]">
                           {participant.score.toLocaleString()}
