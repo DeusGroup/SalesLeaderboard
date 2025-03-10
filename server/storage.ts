@@ -28,6 +28,9 @@ export interface IStorage {
   deleteParticipant(id: number): Promise<void>;
   getAdminByUsername(username: string): Promise<Admin | undefined>;
   addDeal(id: number, deal: Deal): Promise<Participant>;
+  removeDeal(id: number, dealId: string): Promise<Participant>;
+  removeManyDeals(id: number, dealIds: string[]): Promise<Participant>;
+  updateManyDeals(id: number, dealIds: string[], data: { title: string }): Promise<Participant>;
   sessionStore: session.Store;
 }
 
@@ -169,6 +172,113 @@ export class DatabaseStorage implements IStorage {
     await this.updateParticipantMetrics(id, metrics);
 
     // Return updated participant
+    return await this.getParticipant(id) as Participant;
+  }
+
+  async removeDeal(id: number, dealId: string): Promise<Participant> {
+    const participant = await this.getParticipant(id);
+    if (!participant) throw new Error("Participant not found");
+
+    const dealToRemove = participant.dealHistory?.find(d => d.dealId === dealId);
+    if (!dealToRemove) throw new Error("Deal not found");
+
+    // Update metrics based on removed deal
+    const metrics: any = {
+      totalDeals: (participant.totalDeals || 0) - 1
+    };
+
+    switch (dealToRemove.type) {
+      case 'BOARD':
+        metrics.boardRevenue = (participant.boardRevenue || 0) - dealToRemove.amount;
+        break;
+      case 'MSP':
+        metrics.mspRevenue = (participant.mspRevenue || 0) - dealToRemove.amount;
+        break;
+      case 'VOICE':
+        metrics.voiceSeats = (participant.voiceSeats || 0) - Math.floor(dealToRemove.amount);
+        break;
+    }
+
+    // Update participant by removing deal and updating metrics
+    await db
+      .update(participants)
+      .set({
+        ...metrics,
+        dealHistory: participant.dealHistory?.filter(d => d.dealId !== dealId) || []
+      })
+      .where(eq(participants.id, id));
+
+    // Update metrics to recalculate score
+    await this.updateParticipantMetrics(id, metrics);
+
+    // Return updated participant
+    return await this.getParticipant(id) as Participant;
+  }
+
+  async removeManyDeals(id: number, dealIds: string[]): Promise<Participant> {
+    const participant = await this.getParticipant(id);
+    if (!participant) throw new Error("Participant not found");
+
+    const dealsToRemove = participant.dealHistory?.filter(d => dealIds.includes(d.dealId)) || [];
+
+    // Calculate total metrics adjustment
+    const metrics = dealsToRemove.reduce((acc, deal) => {
+      switch (deal.type) {
+        case 'BOARD':
+          acc.boardRevenue = (acc.boardRevenue || 0) - deal.amount;
+          break;
+        case 'MSP':
+          acc.mspRevenue = (acc.mspRevenue || 0) - deal.amount;
+          break;
+        case 'VOICE':
+          acc.voiceSeats = (acc.voiceSeats || 0) - Math.floor(deal.amount);
+          break;
+      }
+      return acc;
+    }, {
+      totalDeals: -dealsToRemove.length,
+      boardRevenue: 0,
+      mspRevenue: 0,
+      voiceSeats: 0
+    });
+
+    // Update participant metrics and remove deals
+    await db
+      .update(participants)
+      .set({
+        boardRevenue: (participant.boardRevenue || 0) + (metrics.boardRevenue || 0),
+        mspRevenue: (participant.mspRevenue || 0) + (metrics.mspRevenue || 0),
+        voiceSeats: (participant.voiceSeats || 0) + (metrics.voiceSeats || 0),
+        totalDeals: (participant.totalDeals || 0) + metrics.totalDeals,
+        dealHistory: participant.dealHistory?.filter(d => !dealIds.includes(d.dealId)) || []
+      })
+      .where(eq(participants.id, id));
+
+    // Update metrics to recalculate score
+    await this.updateParticipantMetrics(id, {
+      boardRevenue: (participant.boardRevenue || 0) + (metrics.boardRevenue || 0),
+      mspRevenue: (participant.mspRevenue || 0) + (metrics.mspRevenue || 0),
+      voiceSeats: (participant.voiceSeats || 0) + (metrics.voiceSeats || 0),
+      totalDeals: (participant.totalDeals || 0) + metrics.totalDeals
+    });
+
+    // Return updated participant
+    return await this.getParticipant(id) as Participant;
+  }
+
+  async updateManyDeals(id: number, dealIds: string[], data: { title: string }): Promise<Participant> {
+    const participant = await this.getParticipant(id);
+    if (!participant) throw new Error("Participant not found");
+
+    const updatedDealHistory = participant.dealHistory?.map(deal => 
+      dealIds.includes(deal.dealId) ? { ...deal, ...data } : deal
+    ) || [];
+
+    await db
+      .update(participants)
+      .set({ dealHistory: updatedDealHistory })
+      .where(eq(participants.id, id));
+
     return await this.getParticipant(id) as Participant;
   }
 }

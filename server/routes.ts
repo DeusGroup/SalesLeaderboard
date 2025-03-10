@@ -22,6 +22,11 @@ const multerStorage = multer.diskStorage({
 
 const upload = multer({ storage: multerStorage });
 
+// Add TypeScript types for req, res, next in requireAuth middleware
+interface AuthRequest extends Express.Request {
+  isAuthenticated(): boolean;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
@@ -45,7 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth middleware for protected routes
-  const requireAuth = (req, res, next) => {
+  const requireAuth = (req: AuthRequest, res: Express.Response, next: Express.NextFunction) => {
     console.log('[Auth] Checking authentication');
     if (!req.isAuthenticated()) {
       console.log('[Auth] Unauthorized access attempt');
@@ -96,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // New endpoint for adding deals
+  // Deal management endpoints
   app.post("/api/participants/:id/deals", requireAuth, async (req, res) => {
     try {
       console.log('[Admin] Adding deal for participant:', req.params.id, req.body);
@@ -117,6 +122,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('[Admin] Error adding deal:', error);
       res.status(400).json({
         error: "Failed to add deal",
+        details: error instanceof Error ? error.message : undefined
+      });
+    }
+  });
+
+  app.delete("/api/participants/:id/deals/:dealId", requireAuth, async (req, res) => {
+    try {
+      console.log('[Admin] Removing deal:', req.params.dealId);
+      const { id, dealId } = req.params;
+      const participant = await storage.removeDeal(parseInt(id), dealId);
+      console.log('[Admin] Deal removed');
+      res.json(participant);
+    } catch (error) {
+      console.error('[Admin] Error removing deal:', error);
+      res.status(400).json({
+        error: "Failed to remove deal",
+        details: error instanceof Error ? error.message : undefined
+      });
+    }
+  });
+
+  // Bulk deal operations
+  app.delete("/api/participants/:id/deals", requireAuth, async (req, res) => {
+    try {
+      console.log('[Admin] Bulk deleting deals:', req.body.dealIds);
+      const { id } = req.params;
+      const { dealIds } = req.body;
+      const participant = await storage.removeManyDeals(parseInt(id), dealIds);
+      console.log('[Admin] Deals deleted');
+      res.json(participant);
+    } catch (error) {
+      console.error('[Admin] Error bulk deleting deals:', error);
+      res.status(400).json({
+        error: "Failed to delete deals",
+        details: error instanceof Error ? error.message : undefined
+      });
+    }
+  });
+
+  app.patch("/api/participants/:id/deals", requireAuth, async (req, res) => {
+    try {
+      console.log('[Admin] Bulk updating deals:', req.body);
+      const { id } = req.params;
+      const { dealIds, title } = req.body;
+      const participant = await storage.updateManyDeals(parseInt(id), dealIds, { title });
+      console.log('[Admin] Deals updated');
+      res.json(participant);
+    } catch (error) {
+      console.error('[Admin] Error bulk updating deals:', error);
+      res.status(400).json({
+        error: "Failed to update deals",
         details: error instanceof Error ? error.message : undefined
       });
     }

@@ -22,21 +22,21 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function AdminDashboard() {
   const { logoutMutation } = useAuth();
   const { toast } = useToast();
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
+  const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
 
-  // Calculate progress percentage safely
   const calculateProgress = (current: number, goal: number) => {
     if (!goal) return 0;
     const progress = (current / goal) * 100;
     return Math.min(100, Math.max(0, progress));
   };
 
-  // Form for adding new participants
   const participantForm = useForm({
     resolver: zodResolver(insertParticipantSchema),
     defaultValues: {
@@ -52,7 +52,6 @@ export function AdminDashboard() {
     },
   });
 
-  // Form for adding new deals
   const dealForm = useForm<InsertDeal>({
     resolver: zodResolver(insertDealSchema),
     defaultValues: {
@@ -63,18 +62,15 @@ export function AdminDashboard() {
     },
   });
 
-  // Query participants
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/participants"],
   });
 
-  // Query selected participant's details
   const { data: selectedParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
   });
 
-  // Mutation for creating new participants
   const createParticipantMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/participants", data);
@@ -98,7 +94,6 @@ export function AdminDashboard() {
     },
   });
 
-  // Mutation for adding new deals
   const addDealMutation = useMutation({
     mutationFn: async (data: { participantId: string; deal: InsertDeal }) => {
       const res = await apiRequest("POST", `/api/participants/${data.participantId}/deals`, data.deal);
@@ -121,7 +116,6 @@ export function AdminDashboard() {
     },
   });
 
-  // Mutation for updating participant metrics
   const updateMetricsMutation = useMutation({
     mutationFn: async (data: { 
       id: number; 
@@ -153,7 +147,6 @@ export function AdminDashboard() {
     },
   });
 
-  // Mutation for deleting participants
   const deleteParticipantMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/participants/${id}`);
@@ -173,6 +166,89 @@ export function AdminDashboard() {
       });
     },
   });
+
+  const removeDealMutation = useMutation({
+    mutationFn: async ({ participantId, dealId }: { participantId: string; dealId: string }) => {
+      const res = await apiRequest("DELETE", `/api/participants/${participantId}/deals/${dealId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
+      toast({
+        title: "Success",
+        description: "Deal removed successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkDealMutation = useMutation({
+    mutationFn: async ({ participantId, dealIds, action, data }: { 
+      participantId: string; 
+      dealIds: string[]; 
+      action: 'delete' | 'update';
+      data?: { title?: string } 
+    }) => {
+      const res = await apiRequest(
+        action === 'delete' ? "DELETE" : "PATCH",
+        `/api/participants/${participantId}/deals`,
+        { dealIds, ...(data || {}) }
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
+      setSelectedDeals([]);
+      toast({
+        title: "Success",
+        description: "Deals updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBulkAction = (action: 'delete' | 'update') => {
+    if (!selectedDeals.length) {
+      toast({
+        title: "Error",
+        description: "Please select at least one deal",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (action === 'delete') {
+      if (confirm(`Are you sure you want to delete ${selectedDeals.length} deal(s)?`)) {
+        bulkDealMutation.mutate({
+          participantId: selectedParticipantId,
+          dealIds: selectedDeals,
+          action: 'delete'
+        });
+      }
+    } else {
+      const newTitle = prompt('Enter new title for selected deals:');
+      if (newTitle) {
+        bulkDealMutation.mutate({
+          participantId: selectedParticipantId,
+          dealIds: selectedDeals,
+          action: 'update',
+          data: { title: newTitle }
+        });
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -238,7 +314,6 @@ export function AdminDashboard() {
               </div>
 
               <div className="space-y-4">
-                {/* Table Header */}
                 <div className="grid grid-cols-4 gap-8 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
                   <div>Name</div>
                   <div>Board Revenue</div>
@@ -246,7 +321,6 @@ export function AdminDashboard() {
                   <div>Voice Seats</div>
                 </div>
 
-                {/* Participant Rows */}
                 {participants?.map((participant) => (
                   <div key={participant.id} className="space-y-6 p-4 rounded-lg border bg-white">
                     <div className="flex items-center justify-between">
@@ -280,9 +354,7 @@ export function AdminDashboard() {
                       </Button>
                     </div>
 
-                    {/* Metrics */}
                     <div className="grid grid-cols-4 gap-8">
-                      {/* Board Revenue */}
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
                           <Input
@@ -320,7 +392,6 @@ export function AdminDashboard() {
                         <Progress value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)} />
                       </div>
 
-                      {/* MSP Revenue */}
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
                           <Input
@@ -358,7 +429,6 @@ export function AdminDashboard() {
                         <Progress value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)} />
                       </div>
 
-                      {/* Voice Seats */}
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
                           <Input
@@ -396,7 +466,6 @@ export function AdminDashboard() {
                         <Progress value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)} />
                       </div>
 
-                      {/* Total Deals */}
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
                           <Input
@@ -435,7 +504,6 @@ export function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* Score */}
                     <div className="flex justify-end">
                       <div className="bg-primary/10 rounded-lg px-3 py-1">
                         <span className="font-bold text-primary">
@@ -451,7 +519,6 @@ export function AdminDashboard() {
 
           <TabsContent value="deals">
             <div className="grid gap-8 lg:grid-cols-2">
-              {/* Deal Entry Form */}
               <div className="bg-white rounded-lg border p-6">
                 <h3 className="text-lg font-semibold mb-4">Add New Deal</h3>
                 <form
@@ -536,9 +603,26 @@ export function AdminDashboard() {
                 </form>
               </div>
 
-              {/* Deal History View */}
               <div className="bg-white rounded-lg border p-6">
-                <h3 className="text-lg font-semibold mb-4">Deal History</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Deal History</h3>
+                  {selectedDeals.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleBulkAction('update')}
+                      >
+                        Edit Selected
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => handleBulkAction('delete')}
+                      >
+                        Delete Selected ({selectedDeals.length})
+                      </Button>
+                    </div>
+                  )}
+                </div>
                 {!selectedParticipantId ? (
                   <div className="text-sm text-muted-foreground text-center py-4">
                     Select a participant to view their deal history
@@ -552,18 +636,47 @@ export function AdminDashboard() {
                     {selectedParticipant.dealHistory.map((deal) => (
                       <div
                         key={deal.dealId}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
                       >
-                        <div>
+                        <Checkbox
+                          checked={selectedDeals.includes(deal.dealId)}
+                          onCheckedChange={(checked) => {
+                            setSelectedDeals(
+                              checked
+                                ? [...selectedDeals, deal.dealId]
+                                : selectedDeals.filter(id => id !== deal.dealId)
+                            );
+                          }}
+                        />
+                        <div className="flex-1">
                           <h4 className="font-medium text-sm">{deal.title}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            ${deal.amount.toLocaleString()}
-                          </p>
-                          <span className="text-xs text-primary">{deal.type}</span>
+                          <div className="flex items-center gap-4 mt-1">
+                            <p className="text-sm text-muted-foreground">
+                              ${deal.amount.toLocaleString()}
+                            </p>
+                            <span className="text-xs text-primary">{deal.type}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          {new Date(deal.date).toLocaleDateString()}
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(deal.date).toLocaleDateString()}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to remove this deal?')) {
+                                removeDealMutation.mutate({
+                                  participantId: selectedParticipantId,
+                                  dealId: deal.dealId
+                                });
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     ))}
