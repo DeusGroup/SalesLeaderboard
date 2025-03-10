@@ -1,0 +1,213 @@
+// Goal Setting Feature Implementation Prompt for Replit
+// Date: March 10, 2025
+// Target Audience: Developer implementing a feature in an admin panel and leaderboard system
+
+/* OVERVIEW:
+You are tasked with adding a 'Goal Setting' feature to the award points section of an admin panel. This feature will allow admins to set individual goals for users based on specific metrics: Board Revenue ($), MSP ($), Voice Seats, and Total Deals. Each user will have personalized targets for these metrics. On the public-facing leaderboard, a progress bar with a percentage will display each user's progress toward their goals. Follow the steps below to implement this feature. Be verbose in your comments and ensure the code is modular and reusable. Assume a web application with a frontend (HTML/CSS/JavaScript) and a backend (e.g., Node.js with a database like MongoDB or SQL). Adjust as needed based on the existing codebase. */
+
+/* STEP-BY-STEP INSTRUCTIONS */
+
+// 1. DATABASE SCHEMA UPDATE
+// In your database (e.g., MongoDB, MySQL), update the 'users' or 'awardPoints' collection/table to include goal fields for each metric.
+// Add the following fields for each user:
+// - boardRevenueGoal (float): Target revenue in dollars
+// - mspGoal (float): Target MSP in dollars
+// - voiceSeatsGoal (integer): Target number of voice seats
+// - totalDealsGoal (integer): Target number of deals
+// Example MongoDB schema update (if using MongoDB):
+/*
+const userSchema = {
+  name: String,
+  awardPoints: Number,
+  metrics: {
+    boardRevenue: { current: Number, goal: Number },
+    msp: { current: Number, goal: Number },
+    voiceSeats: { current: Number, goal: Number },
+    totalDeals: { current: Number, goal: Number }
+  }
+};
+*/
+
+// 2. ADMIN PANEL: ADD GOAL SETTING UI
+// In the admin panel HTML file (e.g., admin.html), add a form for setting goals per user.
+// Locate the section where user metrics are managed and insert this HTML:
+/*
+<div class="goal-setting-section">
+  <h3>Set Goals for <span id="selectedUserName">[User Name]</span></h3>
+  <form id="goalSettingForm">
+    <label for="boardRevenueGoal">Board Revenue Goal ($):</label>
+    <input type="number" id="boardRevenueGoal" name="boardRevenueGoal" step="0.01" min="0" required><br>
+
+    <label for="mspGoal">MSP Goal ($):</label>
+    <input type="number" id="mspGoal" name="mspGoal" step="0.01" min="0" required><br>
+
+    <label for="voiceSeatsGoal">Voice Seats Goal:</label>
+    <input type="number" id="voiceSeatsGoal" name="voiceSeatsGoal" min="0" required><br>
+
+    <label for="totalDealsGoal">Total Deals Goal:</label>
+    <input type="number" id="totalDealsGoal" name="totalDealsGoal" min="0" required><br>
+
+    <button type="submit">Save Goals</button>
+  </form>
+</div>
+*/
+
+// Add CSS for styling (in your CSS file, e.g., admin.css):
+/*
+.goal-setting-section {
+  margin: 20px;
+  padding: 20px;
+  border: 1px solid #ccc;
+}
+.goal-setting-section label {
+  display: block;
+  margin: 10px 0 5px;
+}
+.goal-setting-section input {
+  width: 200px;
+  padding: 5px;
+}
+*/
+
+// 3. ADMIN PANEL: HANDLE FORM SUBMISSION
+// In your JavaScript file (e.g., admin.js), add logic to save goals to the backend.
+// Assume an API endpoint '/api/setGoals' exists to update user goals.
+/*
+document.getElementById('goalSettingForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const userId = 'SELECTED_USER_ID'; // Replace with actual user ID from your admin panel logic
+  const goals = {
+    boardRevenueGoal: parseFloat(document.getElementById('boardRevenueGoal').value),
+    mspGoal: parseFloat(document.getElementById('mspGoal').value),
+    voiceSeatsGoal: parseInt(document.getElementById('voiceSeatsGoal').value),
+    totalDealsGoal: parseInt(document.getElementById('totalDealsGoal').value)
+  };
+
+  try {
+    const response = await fetch('/api/setGoals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, goals })
+    });
+    if (response.ok) {
+      alert('Goals saved successfully!');
+    } else {
+      alert('Error saving goals.');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('An error occurred while saving goals.');
+  }
+});
+*/
+
+// 4. BACKEND: API ENDPOINT TO SAVE GOALS
+// In your backend (e.g., server.js with Express), create an endpoint to update user goals.
+// Example using Node.js, Express, and MongoDB:
+/*
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+app.post('/api/setGoals', async (req, res) => {
+  const { userId, goals } = req.body;
+  try {
+    // Update user document in database (MongoDB example)
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: {
+        'metrics.boardRevenue.goal': goals.boardRevenueGoal,
+        'metrics.msp.goal': goals.mspGoal,
+        'metrics.voiceSeats.goal': goals.voiceSeatsGoal,
+        'metrics.totalDeals.goal': goals.totalDealsGoal
+      }},
+      { new: true }
+    );
+    res.status(200).json({ message: 'Goals updated', user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update goals' });
+  }
+});
+
+app.listen(3000, () => console.log('Server running on port 3000'));
+*/
+
+// 5. LEADERBOARD: DISPLAY PROGRESS BARS
+// In the leaderboard HTML (e.g., leaderboard.html), update the user display to include progress bars.
+// Example for one user row:
+/*
+<div class="user-row">
+  <span class="user-name">[User Name]</span>
+  <div class="metric">
+    <span>Board Revenue: $<span class="current-board-revenue">[Current]</span> / $<span class="goal-board-revenue">[Goal]</span></span>
+    <div class="progress-bar">
+      <div class="progress" style="width: [Percentage]%"></div>
+    </div>
+  </div>
+  <!-- Repeat for MSP, Voice Seats, Total Deals -->
+</div>
+*/
+
+// Add CSS for progress bars (in leaderboard.css):
+/*
+.user-row {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+.metric {
+  margin: 5px 0;
+}
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease-in-out;
+}
+*/
+
+// 6. LEADERBOARD: CALCULATE AND DISPLAY PROGRESS
+// In your leaderboard JavaScript (e.g., leaderboard.js), fetch user data and calculate progress.
+/*
+async function loadLeaderboard() {
+  const response = await fetch('/api/users'); // Assume this endpoint returns all users with metrics
+  const users = await response.json();
+
+  const leaderboardContainer = document.getElementById('leaderboard');
+  leaderboardContainer.innerHTML = '';
+
+  users.forEach(user => {
+    const boardRevenueProgress = (user.metrics.boardRevenue.current / user.metrics.boardRevenue.goal) * 100 || 0;
+    const mspProgress = (user.metrics.msp.current / user.metrics.msp.goal) * 100 || 0;
+    const voiceSeatsProgress = (user.metrics.voiceSeats.current / user.metrics.voiceSeats.goal) * 100 || 0;
+    const totalDealsProgress = (user.metrics.totalDeals.current / user.metrics.totalDeals.goal) * 100 || 0;
+
+    const userRow = `
+      <div class="user-row">
+        <span class="user-name">${user.name}</span>
+        <div class="metric">
+          <span>Board Revenue: $${user.metrics.boardRevenue.current} / $${user.metrics.boardRevenue.goal}</span>
+          <div class="progress-bar"><div class="progress" style="width: ${boardRevenueProgress}%"></div></div>
+        </div>
+        <!-- Add similar blocks for MSP, Voice Seats, Total Deals -->
+      </div>
+    `;
+    leaderboardContainer.innerHTML += userRow;
+  });
+}
+
+loadLeaderboard();
+*/
+
+// 7. TESTING AND VALIDATION
+// - Test the admin panel form: Ensure goals save to the database.
+// - Test the leaderboard: Verify progress bars reflect accurate percentages.
+// - Handle edge cases: What if a goal is 0? (Avoid division by zero; set progress to 0% if goal is 0 or undefined.)
+
+/* END OF IMPLEMENTATION */
