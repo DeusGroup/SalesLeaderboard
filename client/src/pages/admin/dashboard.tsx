@@ -53,12 +53,12 @@ export function AdminDashboard() {
   });
 
   // Form for adding new deals
-  const dealForm = useForm({
+  const dealForm = useForm<InsertDeal>({
     resolver: zodResolver(insertDealSchema),
     defaultValues: {
       title: "",
       amount: 0,
-      type: "BOARD" as const,
+      type: "BOARD",
       date: new Date().toISOString(),
     },
   });
@@ -514,9 +514,9 @@ export function AdminDashboard() {
                   <div className="space-y-2">
                     <Label htmlFor="type">Deal Type</Label>
                     <Select
-                      defaultValue="BOARD"
-                      onValueChange={(value) =>
-                        dealForm.setValue("type", value as "BOARD" | "MSP" | "VOICE")
+                      defaultValue={dealForm.getValues("type")}
+                      onValueChange={(value: "BOARD" | "MSP" | "VOICE") =>
+                        dealForm.setValue("type", value)
                       }
                     >
                       <SelectTrigger>

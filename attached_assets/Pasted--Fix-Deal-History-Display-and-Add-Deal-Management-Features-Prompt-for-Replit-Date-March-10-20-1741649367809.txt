@@ -1,0 +1,327 @@
+// Fix Deal History Display and Add Deal Management Features Prompt for Replit
+// Date: March 10, 2025
+// Issues: Deal History shows "No deals recorded yet" despite test data; need to add individual deal removal and bulk editing
+// Goal: Fix deal history display, enable removing deals individually, and add bulk editing functionality
+
+/* INSTRUCTIONS:
+The admin dashboard's Deal History section isn’t displaying added test data, and you need new features:
+1. Fix the deal history display to show existing deals.
+2. Add a 'Remove' button for each deal in the Deal History section.
+3. Add bulk editing (e.g., select multiple deals to update or delete).
+Assume the issue stems from data not persisting or fetching correctly. Be verbose in comments and adapt to the existing codebase (HTML/CSS/JavaScript frontend, Node.js backend, MongoDB). */
+
+/* STEP-BY-STEP IMPLEMENTATION */
+
+// 1. DEBUG DEAL HISTORY DISPLAY
+// First, ensure test data is correctly added and fetched. Modify the backend and frontend to verify.
+
+// Update /api/addDeal endpoint in server.js to log and return data:
+/*
+app.post('/api/addDeal', async (req, res) => {
+  const { userId, title, amount, date } = req.body;
+  try {
+    const deal = { dealId: Date.now().toString(), title, amount, date };
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $push: { dealHistory: deal }, $inc: { 'metrics.totalDeals.current': 1 } },
+      { new: true }
+    );
+    console.log('Added deal:', deal, 'to user:', updatedUser); // Debug log
+    res.status(200).json({ message: 'Deal added', user: updatedUser });
+  } catch (error) {
+    console.error('Error adding deal:', error);
+    res.status(500).json({ error: 'Failed to add deal' });
+  }
+});
+*/
+
+// 2. UPDATE ADMIN HTML FOR DEAL MANAGEMENT
+// Modify admin.html to include remove buttons and checkboxes for bulk editing:
+/*
+<div class="deal-history-section">
+  <h3>Deal History</h3>
+  <label for="historyUser">Select User:</label>
+  <select id="historyUser" name="historyUser" onchange="loadDealHistory()"></select>
+  <div class="deal-controls">
+    <button id="bulkEditButton" onclick="toggleBulkEdit()" disabled>Bulk Edit</button>
+    <button id="bulkDeleteButton" onclick="bulkDeleteDeals()" disabled>Delete Selected</button>
+  </div>
+  <div id="dealHistoryBox" class="deal-history-box"></div>
+</div>
+*/
+
+// 3. UPDATE ADMIN CSS
+// Add styling in admin.css for deal management:
+/*
+.deal-controls {
+  margin: 10px 0;
+}
+.deal-controls button {
+  padding: 5px 10px;
+  margin-right: 10px;
+}
+.deal-history-box .deal-item {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+}
+.deal-history-box .deal-item input[type="checkbox"] {
+  margin-right: 10px;
+}
+.deal-history-box .deal-item button {
+  margin-left: 10px;
+  padding: 2px 8px;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.deal-history-box .deal-item button:hover {
+  background-color: #cc0000;
+}
+*/
+
+// 4. UPDATE ADMIN JAVASCRIPT
+// Modify admin.js to fix display, add remove functionality, and enable bulk editing:
+/*
+async function loadAdminDashboard() {
+  const response = await fetch('/api/users');
+  const users = await response.json();
+  const tableBody = document.getElementById('usersTableBody');
+  const dealUserSelect = document.getElementById('dealUser');
+  const historyUserSelect = document.getElementById('historyUser');
+  
+  tableBody.innerHTML = '';
+  dealUserSelect.innerHTML = '<option value="">Select User</option>';
+  historyUserSelect.innerHTML = '<option value="">Select User</option>';
+
+  users.forEach(user => {
+    const row = `
+      <tr>
+        <td>${user.name}</td>
+        <td><input type="number" value="${user.metrics.boardRevenue.goal}" onchange="updateGoal('${user._id}', 'boardRevenue', this.value)"></td>
+        <td><input type="number" value="${user.metrics.msp.goal}" onchange="updateGoal('${user._id}', 'msp', this.value)"></td>
+        <td><input type="number" value="${user.metrics.voiceSeats.goal}" onchange="updateGoal('${user._id}', 'voiceSeats', this.value)"></td>
+        <td><input type="number" value="${user.metrics.totalDeals.goal}" onchange="updateGoal('${user._id}', 'totalDeals', this.value)"></td>
+        <td><button onclick="saveGoals('${user._id}')">Save</button></td>
+      </tr>
+    `;
+    tableBody.innerHTML += row;
+    dealUserSelect.innerHTML += `<option value="${user._id}">${user.name}</option>`;
+    historyUserSelect.innerHTML += `<option value="${user._id}">${user.name}</option>`;
+  });
+  loadDealHistory(); // Ensure history loads on page load if a user is selected
+}
+
+async function updateGoal(userId, metric, value) {
+  console.log(`Updated ${metric} goal for user ${userId} to ${value}`);
+}
+
+async function saveGoals(userId) {
+  const goals = {
+    boardRevenueGoal: parseFloat(document.querySelector(`tr td input[onchange*="${userId}"]`).value),
+    mspGoal: parseFloat(document.querySelectorAll(`tr td input[onchange*="${userId}"]`)[1].value),
+    voiceSeatsGoal: parseInt(document.querySelectorAll(`tr td input[onchange*="${userId}"]`)[2].value),
+    totalDealsGoal: parseInt(document.querySelectorAll(`tr td input[onchange*="${userId}"]`)[3].value)
+  };
+  await fetch('/api/setGoals', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, goals })
+  });
+}
+
+document.getElementById('addDealForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const deal = {
+    userId: document.getElementById('dealUser').value,
+    title: document.getElementById('dealTitle').value,
+    amount: parseFloat(document.getElementById('dealAmount').value),
+    date: new Date()
+  };
+  const response = await fetch('/api/addDeal', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(deal)
+  });
+  if (response.ok) {
+    alert('Deal added!');
+    document.getElementById('addDealForm').reset(); // Clear form
+    loadDealHistory(); // Refresh history
+  } else {
+    alert('Failed to add deal');
+  }
+});
+
+async function loadDealHistory() {
+  const userId = document.getElementById('historyUser').value;
+  const dealBox = document.getElementById('dealHistoryBox');
+  const bulkEditButton = document.getElementById('bulkEditButton');
+  const bulkDeleteButton = document.getElementById('bulkDeleteButton');
+  dealBox.innerHTML = '';
+  
+  if (userId) {
+    const response = await fetch(`/api/users/${userId}`);
+    const user = await response.json();
+    console.log('Fetched user deals:', user.dealHistory); // Debug log
+    if (user.dealHistory && user.dealHistory.length > 0) {
+      user.dealHistory.forEach(deal => {
+        dealBox.innerHTML += `
+          <div class="deal-item">
+            <input type="checkbox" class="deal-checkbox" data-deal-id="${deal.dealId}">
+            <span>${deal.title}: $${deal.amount.toFixed(2)} - ${new Date(deal.date).toLocaleDateString()}</span>
+            <button onclick="removeDeal('${userId}', '${deal.dealId}')">Remove</button>
+          </div>
+        `;
+      });
+      bulkEditButton.disabled = false;
+      bulkDeleteButton.disabled = false;
+    } else {
+      dealBox.innerHTML = '<p>No deals recorded yet.</p>';
+      bulkEditButton.disabled = true;
+      bulkDeleteButton.disabled = true;
+    }
+  }
+}
+
+async function removeDeal(userId, dealId) {
+  if (confirm('Are you sure you want to remove this deal?')) {
+    const response = await fetch('/api/removeDeal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, dealId })
+    });
+    if (response.ok) {
+      loadDealHistory(); // Refresh history
+    } else {
+      alert('Failed to remove deal');
+    }
+  }
+}
+
+function toggleBulkEdit() {
+  const checkboxes = document.querySelectorAll('.deal-checkbox:checked');
+  if (checkboxes.length === 0) {
+    alert('Select at least one deal to edit.');
+    return;
+  }
+  const newTitle = prompt('Enter new title for selected deals:');
+  if (newTitle) {
+    bulkEditDeals(newTitle);
+  }
+}
+
+async function bulkEditDeals(newTitle) {
+  const userId = document.getElementById('historyUser').value;
+  const selectedDeals = Array.from(document.querySelectorAll('.deal-checkbox:checked')).map(cb => cb.dataset.dealId);
+  const response = await fetch('/api/bulkEditDeals', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, dealIds: selectedDeals, newTitle })
+  });
+  if (response.ok) {
+    loadDealHistory(); // Refresh history
+  } else {
+    alert('Failed to bulk edit deals');
+  }
+}
+
+async function bulkDeleteDeals() {
+  const selectedDeals = Array.from(document.querySelectorAll('.deal-checkbox:checked')).map(cb => cb.dataset.dealId);
+  if (selectedDeals.length === 0) {
+    alert('Select at least one deal to delete.');
+    return;
+  }
+  if (confirm(`Are you sure you want to delete ${selectedDeals.length} deal(s)?`)) {
+    const userId = document.getElementById('historyUser').value;
+    const response = await fetch('/api/bulkDeleteDeals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, dealIds: selectedDeals })
+    });
+    if (response.ok) {
+      loadDealHistory(); // Refresh history
+    } else {
+      alert('Failed to bulk delete deals');
+    }
+  }
+}
+
+loadAdminDashboard();
+*/
+
+// 5. ADD NEW BACKEND ENDPOINTS
+// Update server.js with endpoints for removing and bulk editing deals:
+/*
+app.post('/api/removeDeal', async (req, res) => {
+  const { userId, dealId } = req.body;
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { dealHistory: { dealId } }, $inc: { 'metrics.totalDeals.current': -1 } },
+      { new: true }
+    );
+    console.log('Removed deal:', dealId, 'from user:', updatedUser); // Debug log
+    res.status(200).json({ message: 'Deal removed', user: updatedUser });
+  } catch (error) {
+    console.error('Error removing deal:', error);
+    res.status(500).json({ error: 'Failed to remove deal' });
+  }
+});
+
+app.post('/api/bulkEditDeals', async (req, res) => {
+  const { userId, dealIds, newTitle } = req.body;
+  try {
+    const updatedUser = await User.updateOne(
+      { _id: userId, 'dealHistory.dealId': { $in: dealIds } },
+      { $set: { 'dealHistory.$[elem].title': newTitle } },
+      { arrayFilters: [{ 'elem.dealId': { $in: dealIds } }], multi: true }
+    );
+    res.status(200).json({ message: 'Deals updated', user: updatedUser });
+  } catch (error) {
+    console.error('Error bulk editing deals:', error);
+    res.status(500).json({ error: 'Failed to bulk edit deals' });
+  }
+});
+
+app.post('/api/bulkDeleteDeals', async (req, res) => {
+  const { userId, dealIds } = req.body;
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { dealHistory: { dealId: { $in: dealIds } } }, $inc: { 'metrics.totalDeals.current': -dealIds.length } },
+      { new: true }
+    );
+    console.log('Bulk deleted deals:', dealIds, 'from user:', updatedUser); // Debug log
+    res.status(200).json({ message: 'Deals deleted', user: updatedUser });
+  } catch (error) {
+    console.error('Error bulk deleting deals:', error);
+    res.status(500).json({ error: 'Failed to bulk delete deals' });
+  }
+});
+*/
+
+// 6. UPDATE LEADERBOARD JAVASCRIPT
+// Ensure leaderboard reflects changes (no major changes needed, just verify):
+/*
+async function loadDealHistory() { // Leaderboard version
+  const userId = document.getElementById('userSelect').value;
+  const dealBox = document.getElementById('dealHistoryBox');
+  dealBox.innerHTML = '';
+  if (userId) {
+    const response = await fetch(`/api/users/${userId}`);
+    const user = await response.json();
+    user.dealHistory.forEach(deal => {
+      dealBox.innerHTML += `<p>${deal.title}: $${deal.amount} - ${new Date(deal.date).toLocaleDateString()}</p>`;
+    });
+  }
+}
+*/
+
+// 7. TESTING AND DEBUGGING
+// - Add test deals via the admin form; check server logs for 'Added deal' output.
+// - Select a user in Deal History; verify deals appear with checkboxes and remove buttons.
+// - Remove a deal; confirm it disappears and Total Deals decreases.
+// - Select multiple deals, bulk edit titles, and bulk delete; verify changes sync to leaderboard.
+
+/* END OF IMPLEMENTATION */
