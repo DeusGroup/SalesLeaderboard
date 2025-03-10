@@ -1,4 +1,4 @@
-import { InsertParticipant, Participant, Admin, participants, admin } from "@shared/schema";
+import { InsertParticipant, Participant, Admin, participants, admin, Deal } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 import session from "express-session";
@@ -27,6 +27,7 @@ export interface IStorage {
   ): Promise<void>;
   deleteParticipant(id: number): Promise<void>;
   getAdminByUsername(username: string): Promise<Admin | undefined>;
+  addDeal(id: number, deal: Deal): Promise<Participant>;
   sessionStore: session.Store;
 }
 
@@ -132,6 +133,43 @@ export class DatabaseStorage implements IStorage {
       .from(admin)
       .where(eq(admin.username, username));
     return foundAdmin;
+  }
+
+  async addDeal(id: number, deal: Deal): Promise<Participant> {
+    const participant = await this.getParticipant(id);
+    if (!participant) throw new Error("Participant not found");
+
+    // Update metrics based on deal type
+    const metrics: any = {
+      totalDeals: (participant.totalDeals || 0) + 1
+    };
+
+    switch (deal.type) {
+      case 'BOARD':
+        metrics.boardRevenue = (participant.boardRevenue || 0) + deal.amount;
+        break;
+      case 'MSP':
+        metrics.mspRevenue = (participant.mspRevenue || 0) + deal.amount;
+        break;
+      case 'VOICE':
+        metrics.voiceSeats = (participant.voiceSeats || 0) + Math.floor(deal.amount);
+        break;
+    }
+
+    // Update participant with new deal and metrics
+    await db
+      .update(participants)
+      .set({
+        ...metrics,
+        dealHistory: [...(participant.dealHistory || []), deal]
+      })
+      .where(eq(participants.id, id));
+
+    // Update metrics to recalculate score
+    await this.updateParticipantMetrics(id, metrics);
+
+    // Return updated participant
+    return await this.getParticipant(id) as Participant;
   }
 }
 

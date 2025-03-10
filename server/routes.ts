@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertParticipantSchema } from "@shared/schema";
+import { insertParticipantSchema, insertDealSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { join } from "path";
 import multer from "multer";
@@ -91,6 +91,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('[Admin] Error creating participant:', error);
       res.status(400).json({
         error: "Invalid participant data",
+        details: error instanceof Error ? error.message : undefined
+      });
+    }
+  });
+
+  // New endpoint for adding deals
+  app.post("/api/participants/:id/deals", requireAuth, async (req, res) => {
+    try {
+      console.log('[Admin] Adding deal for participant:', req.params.id, req.body);
+      const { id } = req.params;
+      const dealData = insertDealSchema.parse(req.body);
+
+      // Generate a unique deal ID
+      const deal = {
+        ...dealData,
+        dealId: `${Date.now()}-${randomBytes(4).toString('hex')}`,
+        date: new Date().toISOString()
+      };
+
+      const participant = await storage.addDeal(parseInt(id), deal);
+      console.log('[Admin] Deal added:', deal);
+      res.json(participant);
+    } catch (error) {
+      console.error('[Admin] Error adding deal:', error);
+      res.status(400).json({
+        error: "Failed to add deal",
         details: error instanceof Error ? error.message : undefined
       });
     }

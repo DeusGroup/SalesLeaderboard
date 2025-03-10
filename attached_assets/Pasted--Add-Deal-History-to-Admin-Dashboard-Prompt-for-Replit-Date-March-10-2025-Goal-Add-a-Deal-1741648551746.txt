@@ -1,0 +1,224 @@
+// Add Deal History to Admin Dashboard Prompt for Replit
+// Date: March 10, 2025
+// Goal: Add a Deal History section to the admin dashboard that correlates with the leaderboard frontend
+// Context: Builds on existing admin dashboard and leaderboard with metrics and deal history functionality
+
+/* INSTRUCTIONS:
+The admin dashboard currently allows setting goals and adding deals, but lacks a view for deal history. This prompt adds a 'Deal History' section to the admin dashboard to:
+1. Display a user's deal history in a selectable, scrollable box.
+2. Correlate with the leaderboard's Deal History tab (same data source).
+3. Maintain the existing layout (scrollable table for goals, separate deal entry section).
+Assume the database schema already includes a 'dealHistory' array per user from previous updates. Be verbose in comments and integrate with the existing codebase. */
+
+/* STEP-BY-STEP IMPLEMENTATION */
+
+// 1. UPDATE ADMIN DASHBOARD HTML
+// Modify admin.html to add a Deal History section below the deal entry form:
+/*
+<div class="admin-container">
+  <h2>Admin Dashboard - User Goals</h2>
+  <div class="users-table-wrapper">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Board Revenue ($)</th>
+          <th>MSP ($)</th>
+          <th>Voice Seats</th>
+          <th>Total Deals</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="deal-entry-section">
+    <h3>Add Deal for User</h3>
+    <form id="addDealForm">
+      <label for="dealUser">Select User:</label>
+      <select id="dealUser" name="dealUser" required></select><br>
+      <label for="dealTitle">Deal Title:</label>
+      <input type="text" id="dealTitle" name="dealTitle" required><br>
+      <label for="dealAmount">Deal Amount ($):</label>
+      <input type="number" id="dealAmount" name="dealAmount" step="0.01" min="0" required><br>
+      <button type="submit">Add Deal</button>
+    </form>
+  </div>
+
+  <div class="deal-history-section">
+    <h3>Deal History</h3>
+    <label for="historyUser">Select User:</label>
+    <select id="historyUser" name="historyUser" onchange="loadDealHistory()"></select>
+    <div id="dealHistoryBox" class="deal-history-box"></div>
+  </div>
+</div>
+*/
+
+// 2. UPDATE ADMIN CSS
+// Add styling to admin.css for the Deal History section:
+/*
+.deal-history-section {
+  padding: 20px;
+  border: 1px solid #ccc;
+  margin-top: 20px;
+}
+.deal-history-section label {
+  display: block;
+  margin: 10px 0 5px;
+}
+.deal-history-section select {
+  width: 200px;
+  padding: 5px;
+}
+.deal-history-box {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 15px;
+  border: 1px solid #ddd;
+  margin-top: 10px;
+}
+.deal-history-box p {
+  margin: 5px 0;
+}
+*/
+
+// 3. UPDATE ADMIN JAVASCRIPT
+// Modify admin.js to populate the Deal History section and sync with deal additions:
+/*
+async function loadAdminDashboard() {
+  const response = await fetch('/api/users');
+  const users = await response.json();
+  const tableBody = document.getElementById('usersTableBody');
+  const dealUserSelect = document.getElementById('dealUser');
+  const historyUserSelect = document.getElementById('historyUser');
+  
+  tableBody.innerHTML = '';
+  dealUserSelect.innerHTML = '<option value="">Select User</option>';
+  historyUserSelect.innerHTML = '<option value="">Select User</option>';
+
+  users.forEach(user => {
+    // Populate goals table
+    const row = `
+      <tr>
+        <td>${user.name}</td>
+        <td><input type="number" value="${user.metrics.boardRevenue.goal}" onchange="updateGoal('${user._id}', 'boardRevenue', this.value)"></td>
+        <td><input type="number" value="${user.metrics.msp.goal}" onchange="updateGoal('${user._id}', 'msp', this.value)"></td>
+        <td><input type="number" value="${user.metrics.voiceSeats.goal}" onchange="updateGoal('${user._id}', 'voiceSeats', this.value)"></td>
+        <td><input type="number" value="${user.metrics.totalDeals.goal}" onchange="updateGoal('${user._id}', 'totalDeals', this.value)"></td>
+        <td><button onclick="saveGoals('${user._id}')">Save</button></td>
+      </tr>
+    `;
+    tableBody.innerHTML += row;
+
+    // Populate user dropdowns for deal entry and history
+    dealUserSelect.innerHTML += `<option value="${user._id}">${user.name}</option>`;
+    historyUserSelect.innerHTML += `<option value="${user._id}">${user.name}</option>`;
+  });
+}
+
+async function updateGoal(userId, metric, value) {
+  console.log(`Updated ${metric} goal for user ${userId} to ${value}`);
+}
+
+async function saveGoals(userId) {
+  const goals = {
+    boardRevenueGoal: parseFloat(document.querySelector(`tr td input[onchange*="${userId}"]`).value),
+    mspGoal: parseFloat(document.querySelectorAll(`tr td input[onchange*="${userId}"]`)[1].value),
+    voiceSeatsGoal: parseInt(document.querySelectorAll(`tr td input[onchange*="${userId}"]`)[2].value),
+    totalDealsGoal: parseInt(document.querySelectorAll(`tr td input[onchange*="${userId}"]`)[3].value)
+  };
+  await fetch('/api/setGoals', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, goals })
+  });
+}
+
+document.getElementById('addDealForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const deal = {
+    userId: document.getElementById('dealUser').value,
+    title: document.getElementById('dealTitle').value,
+    amount: parseFloat(document.getElementById('dealAmount').value),
+    date: new Date()
+  };
+  await fetch('/api/addDeal', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(deal)
+  });
+  alert('Deal added!');
+  loadDealHistory(); // Refresh deal history if the selected user matches
+});
+
+async function loadDealHistory() {
+  const userId = document.getElementById('historyUser').value;
+  const dealBox = document.getElementById('dealHistoryBox');
+  dealBox.innerHTML = '';
+  if (userId) {
+    const response = await fetch(`/api/users/${userId}`);
+    const user = await response.json();
+    user.dealHistory.forEach(deal => {
+      dealBox.innerHTML += `<p>${deal.title}: $${deal.amount.toFixed(2)} - ${new Date(deal.date).toLocaleDateString()}</p>`;
+    });
+  }
+}
+
+loadAdminDashboard();
+*/
+
+// 4. BACKEND VERIFICATION
+// Ensure the existing endpoints in server.js support this:
+/*
+// Existing /api/addDeal endpoint (from previous prompt):
+app.post('/api/addDeal', async (req, res) => {
+  const { userId, title, amount, date } = req.body;
+  try {
+    const deal = { dealId: Date.now().toString(), title, amount, date };
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $push: { dealHistory: deal }, $inc: { 'metrics.totalDeals.current': 1 } },
+      { new: true }
+    );
+    res.status(200).json({ message: 'Deal added', user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add deal' });
+  }
+});
+
+// Existing /api/users/:userId endpoint (from previous prompt):
+app.get('/api/users/:userId', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+*/
+
+// 5. CORRELATION WITH LEADERBOARD
+// The leaderboard (from previous prompt) already has a Deal History tab using the same data:
+/*
+async function loadDealHistory() { // Leaderboard version
+  const userId = document.getElementById('userSelect').value;
+  const dealBox = document.getElementById('dealHistoryBox');
+  dealBox.innerHTML = '';
+  if (userId) {
+    const response = await fetch(`/api/users/${userId}`);
+    const user = await response.json();
+    user.dealHistory.forEach(deal => {
+      dealBox.innerHTML += `<p>${deal.title}: $${deal.amount} - ${new Date(deal.date).toLocaleDateString()}</p>`;
+    });
+  }
+}
+*/
+// No changes needed here; the admin and leaderboard now share the same data source and format.
+
+// 6. TESTING
+// - Add a deal in the admin dashboard and verify it appears in the Deal History section for the selected user.
+// - Check the leaderboard’s Deal History tab for the same user; the deal should match.
+// - Ensure the layout remains clean with the new section (scrollable table, deal entry, and history box).
+
+/* END OF IMPLEMENTATION */
