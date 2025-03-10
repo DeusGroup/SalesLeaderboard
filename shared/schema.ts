@@ -2,6 +2,17 @@ import { pgTable, text, serial, integer, timestamp, json } from "drizzle-orm/pg-
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Deal type definition
+export const dealSchema = z.object({
+  dealId: z.string(),
+  title: z.string(),
+  amount: z.number(),
+  date: z.string(),
+  type: z.enum(['BOARD', 'MSP', 'VOICE']).optional(),
+});
+
+export type Deal = z.infer<typeof dealSchema>;
+
 export const participants = pgTable("participants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -18,6 +29,7 @@ export const participants = pgTable("participants", {
   score: integer("score").notNull().default(0),
   role: text("role").default("Sales Representative"),
   department: text("department").default("IT"),
+  dealHistory: json("deal_history").$type<Deal[]>().default([]),
   performanceHistory: json("performance_history").$type<Array<{
     timestamp: string;
     score: number;
@@ -48,6 +60,9 @@ export const insertParticipantSchema = createInsertSchema(participants).pick({
   department: true,
 });
 
+// Schema for deal creation
+export const insertDealSchema = dealSchema.omit({ dealId: true });
+
 // Schema for admin login
 export const adminLoginSchema = createInsertSchema(admin).pick({
   username: true,
@@ -55,5 +70,6 @@ export const adminLoginSchema = createInsertSchema(admin).pick({
 });
 
 export type InsertParticipant = z.infer<typeof insertParticipantSchema>;
+export type InsertDeal = z.infer<typeof insertDealSchema>;
 export type Participant = typeof participants.$inferSelect;
 export type Admin = typeof admin.$inferSelect;
