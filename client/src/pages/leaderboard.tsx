@@ -5,23 +5,17 @@ import type { Participant } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-// Add debug logging to the calculate progress function
-const calculateProgress = (current: number, goal: number) => {
-  console.log(`Calculating progress - Current: ${current}, Goal: ${goal}`);
-  if (!goal) {
-    console.log('Goal is 0 or undefined, returning 0%');
-    return 0;
-  }
-  const progress = (current / goal) * 100;
-  const clampedProgress = Math.min(100, Math.max(0, progress));
-  console.log(`Progress calculated: ${clampedProgress}%`);
-  return clampedProgress;
-};
-
 export default function LeaderboardPage() {
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/leaderboard"],
   });
+
+  // Calculate progress percentage safely
+  const calculateProgress = (current: number, goal: number) => {
+    if (!goal) return 0;
+    const progress = (current / goal) * 100;
+    return Math.min(100, Math.max(0, progress));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
