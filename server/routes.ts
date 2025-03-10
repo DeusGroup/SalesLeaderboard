@@ -73,14 +73,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/participants/:id", requireAuth, async (req, res) => {
     try {
+      console.log('[Admin] Fetching participant:', req.params.id);
       const { id } = req.params;
       const participant = await storage.getParticipant(parseInt(id));
+
       if (!participant) {
+        console.log('[Admin] Participant not found:', id);
         return res.status(404).json({ error: "Participant not found" });
       }
+
+      console.log('[Admin] Found participant:', {
+        id: participant.id,
+        name: participant.name,
+        dealHistoryCount: participant.dealHistory?.length
+      });
+
       res.json(participant);
     } catch (error) {
       console.error('[Admin] Error fetching participant:', error);
+      console.error('[Admin] Stack trace:', error instanceof Error ? error.stack : '');
       res.status(500).json({ error: 'Failed to fetch participant' });
     }
   });
@@ -104,9 +115,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Deal management endpoints
   app.post("/api/participants/:id/deals", requireAuth, async (req, res) => {
     try {
-      console.log('[Admin] Adding deal for participant:', req.params.id, req.body);
+      console.log('[Admin] Adding deal - Request body:', req.body);
+      console.log('[Admin] Participant ID:', req.params.id);
+
       const { id } = req.params;
       const dealData = insertDealSchema.parse(req.body);
+      console.log('[Admin] Validated deal data:', dealData);
 
       // Generate a unique deal ID
       const deal = {
@@ -114,12 +128,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dealId: `${Date.now()}-${randomBytes(4).toString('hex')}`,
         date: new Date().toISOString()
       };
+      console.log('[Admin] Final deal object:', deal);
 
       const participant = await storage.addDeal(parseInt(id), deal);
-      console.log('[Admin] Deal added:', deal);
-      res.json(participant);
+      console.log('[Admin] Updated participant after deal addition:', participant);
+      console.log('[Admin] Deal history length:', participant.dealHistory?.length);
+
+      // Return the updated participant data
+      res.json({
+        success: true,
+        participant,
+        addedDeal: deal
+      });
     } catch (error) {
       console.error('[Admin] Error adding deal:', error);
+      console.error('[Admin] Stack trace:', error instanceof Error ? error.stack : '');
       res.status(400).json({
         error: "Failed to add deal",
         details: error instanceof Error ? error.message : undefined
@@ -218,11 +241,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { name, role, department, avatarUrl } = req.body;
 
     try {
-      await storage.updateParticipantProfile(parseInt(id), { 
-        name, 
-        role, 
+      await storage.updateParticipantProfile(parseInt(id), {
+        name,
+        role,
         department,
-        avatarUrl 
+        avatarUrl
       });
       const participant = await storage.getParticipant(parseInt(id));
       res.json(participant);
