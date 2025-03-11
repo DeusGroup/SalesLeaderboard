@@ -94,73 +94,73 @@ export default function LeaderboardPage() {
                       {/* Metrics Grid */}
                       <div className="grid grid-cols-4 gap-6">
                         {/* Board Revenue */}
-                        <div className="h-[120px] flex flex-col">
-                          <div className="font-medium text-gray-700">Board Revenue</div>
-                          <div className="font-semibold text-gray-900 text-lg mt-1">
+                        <div className="grid h-[120px] grid-rows-[28px,28px,1fr,24px]">
+                          <div className="font-medium text-gray-700 leading-none pt-1">Board Revenue</div>
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-1 min-w-[80px]">
                             ${participant.boardRevenue.toLocaleString()}
                           </div>
-                          <div className="mt-2">
+                          <div className="self-end">
                             <Progress
                               value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
                               className="h-2 bg-gray-100"
                               indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                             />
                           </div>
-                          <div className="text-sm text-gray-600 mt-auto pt-2">
+                          <div className="text-sm text-gray-600 leading-none pt-1">
                             Goal: ${participant.boardRevenueGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* MSP Revenue */}
-                        <div className="h-[120px] flex flex-col">
-                          <div className="font-medium text-gray-700">MSP Revenue</div>
-                          <div className="font-semibold text-gray-900 text-lg mt-1">
+                        <div className="grid h-[120px] grid-rows-[28px,28px,1fr,24px]">
+                          <div className="font-medium text-gray-700 leading-none pt-1">MSP Revenue</div>
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-1 min-w-[80px]">
                             ${participant.mspRevenue.toLocaleString()}
                           </div>
-                          <div className="mt-2">
+                          <div className="self-end">
                             <Progress
                               value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)}
                               className="h-2 bg-gray-100"
                               indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                             />
                           </div>
-                          <div className="text-sm text-gray-600 mt-auto pt-2">
+                          <div className="text-sm text-gray-600 leading-none pt-1">
                             Goal: ${participant.mspRevenueGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* Voice Seats */}
-                        <div className="h-[120px] flex flex-col">
-                          <div className="font-medium text-gray-700">Voice Seats</div>
-                          <div className="font-semibold text-gray-900 text-lg mt-1">
+                        <div className="grid h-[120px] grid-rows-[28px,28px,1fr,24px]">
+                          <div className="font-medium text-gray-700 leading-none pt-1">Voice Seats</div>
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-1 min-w-[80px]">
                             {participant.voiceSeats.toLocaleString()}
                           </div>
-                          <div className="mt-2">
+                          <div className="self-end">
                             <Progress
                               value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)}
                               className="h-2 bg-gray-100"
                               indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                             />
                           </div>
-                          <div className="text-sm text-gray-600 mt-auto pt-2">
+                          <div className="text-sm text-gray-600 leading-none pt-1">
                             Goal: {participant.voiceSeatsGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* Total Deals */}
-                        <div className="h-[120px] flex flex-col">
-                          <div className="font-medium text-gray-700">Total Deals</div>
-                          <div className="font-semibold text-gray-900 text-lg mt-1">
+                        <div className="grid h-[120px] grid-rows-[28px,28px,1fr,24px]">
+                          <div className="font-medium text-gray-700 leading-none pt-1">Total Deals</div>
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-1 min-w-[80px]">
                             {participant.totalDeals.toLocaleString()}
                           </div>
-                          <div className="mt-2">
+                          <div className="self-end">
                             <Progress
                               value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)}
                               className="h-2 bg-gray-100"
                               indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                             />
                           </div>
-                          <div className="text-sm text-gray-600 mt-auto pt-2">
+                          <div className="text-sm text-gray-600 leading-none pt-1">
                             Goal: {participant.totalDealsGoal.toLocaleString()}
                           </div>
                         </div>
