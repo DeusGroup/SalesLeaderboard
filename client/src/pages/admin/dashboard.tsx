@@ -218,7 +218,9 @@ export function AdminDashboard() {
                               {participant.name.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <span className="font-medium">{participant.name}</span>
+                          <Link href={`/admin/profile/${participant.id}`}>
+                            <a className="font-medium hover:text-primary">{participant.name}</a>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="icon"
