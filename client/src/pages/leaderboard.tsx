@@ -94,9 +94,9 @@ export default function LeaderboardPage() {
                       {/* Metrics Grid */}
                       <div className="grid grid-cols-4 gap-6">
                         {/* Board Revenue */}
-                        <div className="grid h-[130px] grid-rows-[28px,32px,1fr,24px]">
+                        <div className="grid h-[100px] grid-rows-[28px,32px,1fr]">
                           <div className="font-medium text-gray-700 leading-none pt-1">Board Revenue</div>
-                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3 min-w-[80px]">
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             ${participant.boardRevenue.toLocaleString()}
                           </div>
                           <div className="self-end">
@@ -106,15 +106,12 @@ export default function LeaderboardPage() {
                               indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                             />
                           </div>
-                          <div className="text-sm text-gray-600 leading-none pt-1">
-                            Goal: ${participant.boardRevenueGoal.toLocaleString()}
-                          </div>
                         </div>
 
                         {/* MSP Revenue */}
-                        <div className="grid h-[130px] grid-rows-[28px,32px,1fr,24px]">
+                        <div className="grid h-[100px] grid-rows-[28px,32px,1fr]">
                           <div className="font-medium text-gray-700 leading-none pt-1">MSP Revenue</div>
-                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3 min-w-[80px]">
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             ${participant.mspRevenue.toLocaleString()}
                           </div>
                           <div className="self-end">
@@ -124,15 +121,12 @@ export default function LeaderboardPage() {
                               indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                             />
                           </div>
-                          <div className="text-sm text-gray-600 leading-none pt-1">
-                            Goal: ${participant.mspRevenueGoal.toLocaleString()}
-                          </div>
                         </div>
 
                         {/* Voice Seats */}
-                        <div className="grid h-[130px] grid-rows-[28px,32px,1fr,24px]">
+                        <div className="grid h-[100px] grid-rows-[28px,32px,1fr]">
                           <div className="font-medium text-gray-700 leading-none pt-1">Voice Seats</div>
-                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3 min-w-[80px]">
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             {participant.voiceSeats.toLocaleString()}
                           </div>
                           <div className="self-end">
@@ -142,15 +136,12 @@ export default function LeaderboardPage() {
                               indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                             />
                           </div>
-                          <div className="text-sm text-gray-600 leading-none pt-1">
-                            Goal: {participant.voiceSeatsGoal.toLocaleString()}
-                          </div>
                         </div>
 
                         {/* Total Deals */}
-                        <div className="grid h-[130px] grid-rows-[28px,32px,1fr,24px]">
+                        <div className="grid h-[100px] grid-rows-[28px,32px,1fr]">
                           <div className="font-medium text-gray-700 leading-none pt-1">Total Deals</div>
-                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3 min-w-[80px]">
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             {participant.totalDeals.toLocaleString()}
                           </div>
                           <div className="self-end">
@@ -159,9 +150,6 @@ export default function LeaderboardPage() {
                               className="h-2 bg-gray-100"
                               indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                             />
-                          </div>
-                          <div className="text-sm text-gray-600 leading-none pt-1">
-                            Goal: {participant.totalDealsGoal.toLocaleString()}
                           </div>
                         </div>
                       </div>
