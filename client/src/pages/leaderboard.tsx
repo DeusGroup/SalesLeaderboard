@@ -95,9 +95,9 @@ export default function LeaderboardPage() {
                       <div className="grid grid-cols-4 gap-4">
                         {/* Board Revenue */}
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-base">
-                            <span className="font-medium text-gray-700">Board Revenue</span>
-                            <span className="font-semibold text-gray-900">${participant.boardRevenue.toLocaleString()}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700 min-w-[110px]">Board Revenue</span>
+                            <span className="font-semibold text-gray-900 ml-auto">${participant.boardRevenue.toLocaleString()}</span>
                           </div>
                           <Progress
                             value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
@@ -111,9 +111,9 @@ export default function LeaderboardPage() {
 
                         {/* MSP Revenue */}
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-base">
-                            <span className="font-medium text-gray-700">MSP Revenue</span>
-                            <span className="font-semibold text-gray-900">${participant.mspRevenue.toLocaleString()}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700 min-w-[100px]">MSP Revenue</span>
+                            <span className="font-semibold text-gray-900 ml-auto">${participant.mspRevenue.toLocaleString()}</span>
                           </div>
                           <Progress
                             value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)}
@@ -127,9 +127,9 @@ export default function LeaderboardPage() {
 
                         {/* Voice Seats */}
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-base">
-                            <span className="font-medium text-gray-700">Voice Seats</span>
-                            <span className="font-semibold text-gray-900">{participant.voiceSeats.toLocaleString()}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700 min-w-[90px]">Voice Seats</span>
+                            <span className="font-semibold text-gray-900 ml-auto">{participant.voiceSeats.toLocaleString()}</span>
                           </div>
                           <Progress
                             value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)}
@@ -143,9 +143,9 @@ export default function LeaderboardPage() {
 
                         {/* Total Deals */}
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-base">
-                            <span className="font-medium text-gray-700">Total Deals</span>
-                            <span className="font-semibold text-gray-900">{participant.totalDeals.toLocaleString()}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700 min-w-[90px]">Total Deals</span>
+                            <span className="font-semibold text-gray-900 ml-auto">{participant.totalDeals.toLocaleString()}</span>
                           </div>
                           <Progress
                             value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)}
