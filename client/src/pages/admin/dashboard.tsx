@@ -280,7 +280,7 @@ export function AdminDashboard() {
     });
   };
 
-  // Update the deal history rendering logic
+  // Update the deal history rendering logic with better type safety
   const renderDealHistory = () => {
     console.log('[Admin Dashboard] Rendering deal history:', {
       selectedParticipantId,
@@ -313,10 +313,10 @@ export function AdminDashboard() {
       );
     }
 
-    const deals = selectedParticipant.dealHistory;
+    const deals = selectedParticipant.dealHistory || [];
     console.log('[Admin Dashboard] Deals to render:', deals);
 
-    if (deals.length === 0) {
+    if (!Array.isArray(deals) || deals.length === 0) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
           No deals recorded yet
