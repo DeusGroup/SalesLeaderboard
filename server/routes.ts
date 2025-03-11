@@ -82,6 +82,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Participant not found" });
       }
 
+      // Ensure dealHistory is properly initialized
+      participant.dealHistory = participant.dealHistory || [];
+
       console.log('[Admin] Found participant:', {
         id: participant.id,
         name: participant.name,

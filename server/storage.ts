@@ -45,15 +45,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getParticipant(id: number): Promise<Participant | undefined> {
-    const [participant] = await db.select().from(participants).where(eq(participants.id, id));
+    const [participant] = await db
+      .select()
+      .from(participants)
+      .where(eq(participants.id, id));
+
+    // Ensure dealHistory is properly initialized as an array
+    if (participant) {
+      participant.dealHistory = participant.dealHistory || [];
+    }
+
     return participant;
   }
 
   async getParticipantsByScore(): Promise<Participant[]> {
-    return db
+    const allParticipants = await db
       .select()
       .from(participants)
       .orderBy(desc(participants.score));
+
+    // Ensure dealHistory is properly initialized for all participants
+    return allParticipants.map(participant => ({
+      ...participant,
+      dealHistory: participant.dealHistory || []
+    }));
   }
 
   async createParticipant(participant: InsertParticipant): Promise<Participant> {
