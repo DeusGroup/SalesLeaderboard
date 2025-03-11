@@ -139,8 +139,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addDeal(id: number, deal: Deal): Promise<Participant> {
+    console.log('[Storage] Adding deal - Input:', { participantId: id, deal });
+
     const participant = await this.getParticipant(id);
     if (!participant) throw new Error("Participant not found");
+
+    console.log('[Storage] Found participant:', {
+      id: participant.id,
+      currentDealHistory: participant.dealHistory
+    });
 
     // Update metrics based on deal type
     const metrics: any = {
@@ -159,20 +166,36 @@ export class DatabaseStorage implements IStorage {
         break;
     }
 
+    // Ensure dealHistory is an array
+    const currentDealHistory = Array.isArray(participant.dealHistory) ? participant.dealHistory : [];
+    const updatedDealHistory = [...currentDealHistory, deal];
+
+    console.log('[Storage] Updating participant with:', {
+      metrics,
+      dealHistoryLength: updatedDealHistory.length,
+      latestDeal: deal
+    });
+
     // Update participant with new deal and metrics
     await db
       .update(participants)
       .set({
         ...metrics,
-        dealHistory: [...(participant.dealHistory || []), deal]
+        dealHistory: updatedDealHistory
       })
       .where(eq(participants.id, id));
 
     // Update metrics to recalculate score
     await this.updateParticipantMetrics(id, metrics);
 
-    // Return updated participant
-    return await this.getParticipant(id) as Participant;
+    // Fetch and return updated participant
+    const updatedParticipant = await this.getParticipant(id);
+    console.log('[Storage] Updated participant result:', {
+      id: updatedParticipant?.id,
+      dealHistoryLength: updatedParticipant?.dealHistory?.length
+    });
+
+    return updatedParticipant as Participant;
   }
 
   async removeDeal(id: number, dealId: string): Promise<Participant> {
@@ -270,7 +293,7 @@ export class DatabaseStorage implements IStorage {
     const participant = await this.getParticipant(id);
     if (!participant) throw new Error("Participant not found");
 
-    const updatedDealHistory = participant.dealHistory?.map(deal => 
+    const updatedDealHistory = participant.dealHistory?.map(deal =>
       dealIds.includes(deal.dealId) ? { ...deal, ...data } : deal
     ) || [];
 

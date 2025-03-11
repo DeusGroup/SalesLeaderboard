@@ -8,7 +8,7 @@ export const dealSchema = z.object({
   title: z.string(),
   amount: z.number(),
   date: z.string(),
-  type: z.enum(['BOARD', 'MSP', 'VOICE']).optional(),
+  type: z.enum(['BOARD', 'MSP', 'VOICE']),
 });
 
 export type Deal = z.infer<typeof dealSchema>;
@@ -21,7 +21,6 @@ export const participants = pgTable("participants", {
   mspRevenue: integer("msp_revenue").notNull().default(0),
   voiceSeats: integer("voice_seats").notNull().default(0),
   totalDeals: integer("total_deals").notNull().default(0),
-  // Adding goal fields
   boardRevenueGoal: integer("board_revenue_goal").notNull().default(0),
   mspRevenueGoal: integer("msp_revenue_goal").notNull().default(0),
   voiceSeatsGoal: integer("voice_seats_goal").notNull().default(0),
@@ -29,6 +28,7 @@ export const participants = pgTable("participants", {
   score: integer("score").notNull().default(0),
   role: text("role").default("Sales Representative"),
   department: text("department").default("IT"),
+  // Ensure dealHistory is properly typed as a JSON array
   dealHistory: json("deal_history").$type<Deal[]>().default([]),
   performanceHistory: json("performance_history").$type<Array<{
     timestamp: string;
