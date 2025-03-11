@@ -166,13 +166,12 @@ export class DatabaseStorage implements IStorage {
         break;
     }
 
-    // Ensure dealHistory is an array
-    const currentDealHistory = Array.isArray(participant.dealHistory) ? participant.dealHistory : [];
-    const updatedDealHistory = [...currentDealHistory, deal];
+    // Ensure dealHistory is an array and add the new deal
+    const dealHistory = Array.isArray(participant.dealHistory) ? [...participant.dealHistory, deal] : [deal];
 
     console.log('[Storage] Updating participant with:', {
       metrics,
-      dealHistoryLength: updatedDealHistory.length,
+      dealHistoryLength: dealHistory.length,
       latestDeal: deal
     });
 
@@ -181,7 +180,7 @@ export class DatabaseStorage implements IStorage {
       .update(participants)
       .set({
         ...metrics,
-        dealHistory: updatedDealHistory
+        dealHistory
       })
       .where(eq(participants.id, id));
 
@@ -190,12 +189,15 @@ export class DatabaseStorage implements IStorage {
 
     // Fetch and return updated participant
     const updatedParticipant = await this.getParticipant(id);
+    if (!updatedParticipant) throw new Error("Failed to fetch updated participant");
+
     console.log('[Storage] Updated participant result:', {
-      id: updatedParticipant?.id,
-      dealHistoryLength: updatedParticipant?.dealHistory?.length
+      id: updatedParticipant.id,
+      dealHistoryLength: updatedParticipant.dealHistory.length,
+      deals: updatedParticipant.dealHistory
     });
 
-    return updatedParticipant as Participant;
+    return updatedParticipant;
   }
 
   async removeDeal(id: number, dealId: string): Promise<Participant> {

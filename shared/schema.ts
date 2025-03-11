@@ -28,8 +28,7 @@ export const participants = pgTable("participants", {
   score: integer("score").notNull().default(0),
   role: text("role").default("Sales Representative"),
   department: text("department").default("IT"),
-  // Ensure dealHistory is properly typed as a JSON array
-  dealHistory: json("deal_history").$type<Deal[]>().default([]),
+  dealHistory: json("deal_history").$type<Deal[]>().default([]).notNull(),
   performanceHistory: json("performance_history").$type<Array<{
     timestamp: string;
     score: number;
@@ -61,7 +60,7 @@ export const insertParticipantSchema = createInsertSchema(participants).pick({
 });
 
 // Schema for deal creation
-export const insertDealSchema = dealSchema.omit({ dealId: true });
+export const insertDealSchema = dealSchema.omit({ dealId: true, date: true });
 
 // Schema for admin login
 export const adminLoginSchema = createInsertSchema(admin).pick({
