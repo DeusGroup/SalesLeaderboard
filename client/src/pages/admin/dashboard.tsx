@@ -72,18 +72,13 @@ export function AdminDashboard() {
     }
   });
 
-  // Improve selected participant query typing and debugging
+  // Update the selected participant query to ensure proper data fetching
   const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
-    onSuccess: (data) => {
-      console.log('[Admin Dashboard] Selected participant loaded:', {
-        id: data?.id,
-        name: data?.name,
-        dealHistory: data?.dealHistory,
-        dealHistoryLength: data?.dealHistory?.length
-      });
-    },
+    retry: 1,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     onError: (error) => {
       console.error('[Admin Dashboard] Error loading selected participant:', error);
     }
@@ -100,8 +95,11 @@ export function AdminDashboard() {
     },
     onSuccess: (data) => {
       console.log('[Admin Dashboard] Deal added successfully:', data);
-      // Force refetch both queries
-      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
+      // Force refetch queries with exact matches
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/participants"],
+        exact: true
+      });
       if (selectedParticipantId) {
         queryClient.invalidateQueries({ 
           queryKey: ["/api/participants", selectedParticipantId],
@@ -124,7 +122,6 @@ export function AdminDashboard() {
     },
   });
 
-  // Add more debugging to the form submission
   const handleDealSubmit = (data: InsertDeal) => {
     console.log('[Admin Dashboard] Submitting deal form:', {
       formData: data,
@@ -146,15 +143,8 @@ export function AdminDashboard() {
     });
   };
 
-  // Update the deal history rendering logic with better type safety
+  // Simplified and fixed deal history rendering
   const renderDealHistory = () => {
-    console.log('[Admin Dashboard] Rendering deal history:', {
-      selectedParticipantId,
-      isLoadingParticipant,
-      selectedParticipant,
-      dealHistory: selectedParticipant?.dealHistory
-    });
-
     if (!selectedParticipantId) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
@@ -171,17 +161,22 @@ export function AdminDashboard() {
       );
     }
 
-    // Initialize deals as an empty array if dealHistory is undefined or null
-    const deals = selectedParticipant?.dealHistory || [];
-    console.log('[Admin Dashboard] Deals to render:', deals);
-
-    if (!Array.isArray(deals)) {
+    if (!selectedParticipant) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
-          No deals history available
+          No participant data available
         </div>
       );
     }
+
+    // Ensure we're working with an array
+    const deals = Array.isArray(selectedParticipant.dealHistory) ? selectedParticipant.dealHistory : [];
+
+    console.log('[Admin Dashboard] Rendering deals:', {
+      participantId: selectedParticipant.id,
+      dealsCount: deals.length,
+      deals
+    });
 
     if (deals.length === 0) {
       return (
