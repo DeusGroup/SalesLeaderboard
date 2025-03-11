@@ -99,8 +99,10 @@ export default function LeaderboardPage() {
                           <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             ${participant.boardRevenue.toLocaleString()}
                           </div>
-                          <div className="self-end space-y-1">
-                            <div className="text-xs text-gray-600">Goal Progress</div>
+                          <div className="self-end relative">
+                            <div className="absolute -left-16 top-1/2 -translate-y-1/2 text-xs text-gray-600 whitespace-nowrap">
+                              Goal Progress
+                            </div>
                             <Progress
                               value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
                               className="h-2 bg-gray-100"
@@ -115,8 +117,7 @@ export default function LeaderboardPage() {
                           <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             ${participant.mspRevenue.toLocaleString()}
                           </div>
-                          <div className="self-end space-y-1">
-                            <div className="text-xs text-gray-600">Goal Progress</div>
+                          <div className="self-end">
                             <Progress
                               value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)}
                               className="h-2 bg-gray-100"
@@ -131,8 +132,7 @@ export default function LeaderboardPage() {
                           <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             {participant.voiceSeats.toLocaleString()}
                           </div>
-                          <div className="self-end space-y-1">
-                            <div className="text-xs text-gray-600">Goal Progress</div>
+                          <div className="self-end">
                             <Progress
                               value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)}
                               className="h-2 bg-gray-100"
@@ -147,8 +147,7 @@ export default function LeaderboardPage() {
                           <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             {participant.totalDeals.toLocaleString()}
                           </div>
-                          <div className="self-end space-y-1">
-                            <div className="text-xs text-gray-600">Goal Progress</div>
+                          <div className="self-end">
                             <Progress
                               value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)}
                               className="h-2 bg-gray-100"
