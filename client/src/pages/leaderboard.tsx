@@ -1,31 +1,22 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Trophy, DollarSign, Building2, Phone, Target, Calendar } from "lucide-react";
-import type { Participant, Deal } from "@shared/schema";
+import { Trophy, DollarSign, Building2, Phone, Target } from "lucide-react";
+import type { Participant } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
 
 export default function LeaderboardPage() {
-  const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
-
-  const { data: participants, isLoading } = useQuery<Participant[]>({
-    queryKey: ["/api/leaderboard"],
-  });
-
-  const { data: selectedParticipant } = useQuery<Participant>({
-    queryKey: ["/api/participants", selectedParticipantId],
-    enabled: !!selectedParticipantId,
-  });
-
   // Calculate progress percentage safely
   const calculateProgress = (current: number, goal: number) => {
     if (!goal) return 0;
     const progress = (current / goal) * 100;
     return Math.min(100, Math.max(0, progress));
   };
+
+  const { data: participants, isLoading } = useQuery<Participant[]>({
+    queryKey: ["/api/leaderboard"],
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
@@ -51,7 +42,6 @@ export default function LeaderboardPage() {
         <Tabs defaultValue="metrics" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="metrics" className="text-base">Performance Metrics</TabsTrigger>
-            <TabsTrigger value="deals" className="text-base">Deal History</TabsTrigger>
           </TabsList>
 
           {/* Metrics Tab Content */}
@@ -231,59 +221,6 @@ export default function LeaderboardPage() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
-
-          {/* Deal History Tab Content */}
-          <TabsContent value="deals">
-            <div className="bg-white rounded-lg border p-6">
-              <div className="max-w-md mx-auto">
-                <h2 className="text-lg font-semibold mb-4">Deal History</h2>
-                <Select value={selectedParticipantId} onValueChange={setSelectedParticipantId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a participant" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {participants?.map(participant => (
-                      <SelectItem key={participant.id} value={participant.id.toString()}>
-                        {participant.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <div className="mt-6 space-y-4 max-h-[400px] overflow-y-auto">
-                  {!selectedParticipantId ? (
-                    <div className="text-sm text-muted-foreground text-center py-4">
-                      Select a participant to view their deal history
-                    </div>
-                  ) : !selectedParticipant?.dealHistory?.length ? (
-                    <div className="text-sm text-muted-foreground text-center py-4">
-                      No deals recorded yet
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {selectedParticipant.dealHistory.map((deal: Deal) => (
-                        <div 
-                          key={deal.dealId}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
-                        >
-                          <div>
-                            <h3 className="font-medium text-sm">{deal.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              ${deal.amount.toLocaleString()}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(deal.date).toLocaleDateString()}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </TabsContent>
         </Tabs>
