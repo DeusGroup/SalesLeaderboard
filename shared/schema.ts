@@ -1,17 +1,6 @@
-import { pgTable, text, serial, integer, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-
-// Deal type definition with strict validation
-export const dealSchema = z.object({
-  dealId: z.string(),
-  title: z.string().min(1, "Title is required"),
-  amount: z.number().min(0, "Amount must be non-negative"),
-  date: z.string(),
-  type: z.enum(['BOARD', 'MSP', 'VOICE']),
-});
-
-export type Deal = z.infer<typeof dealSchema>;
 
 // Participant table definition
 export const participants = pgTable("participants", {
@@ -29,12 +18,6 @@ export const participants = pgTable("participants", {
   score: integer("score").notNull().default(0),
   role: text("role").default("Sales Representative"),
   department: text("department").default("IT"),
-  dealHistory: json("deal_history").$type<Deal[]>().default([]).notNull(),
-  performanceHistory: json("performance_history").$type<Array<{
-    timestamp: string;
-    score: number;
-    description: string;
-  }>>().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -61,11 +44,6 @@ export const insertParticipantSchema = createInsertSchema(participants).pick({
   department: true,
 });
 
-// Schema for deal creation with strict validation
-export const insertDealSchema = dealSchema
-  .omit({ dealId: true, date: true })
-  .strict();
-
 // Schema for admin login
 export const adminLoginSchema = createInsertSchema(admin).pick({
   username: true,
@@ -73,6 +51,5 @@ export const adminLoginSchema = createInsertSchema(admin).pick({
 });
 
 export type InsertParticipant = z.infer<typeof insertParticipantSchema>;
-export type InsertDeal = z.infer<typeof insertDealSchema>;
 export type Participant = typeof participants.$inferSelect;
 export type Admin = typeof admin.$inferSelect;

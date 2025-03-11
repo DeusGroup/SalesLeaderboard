@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertParticipantSchema, insertDealSchema } from "@shared/schema";
+import { insertParticipantSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { join } from "path";
 import multer from "multer";
@@ -22,7 +22,6 @@ const multerStorage = multer.diskStorage({
 
 const upload = multer({ storage: multerStorage });
 
-// Add TypeScript types for req, res, next in requireAuth middleware
 interface AuthRequest extends Express.Request {
   isAuthenticated(): boolean;
 }
@@ -82,13 +81,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Participant not found" });
       }
 
-      console.log('[Routes] Participant found:', {
-        id: participant.id,
-        name: participant.name,
-        dealHistoryLength: participant.dealHistory.length,
-        dealHistory: participant.dealHistory
-      });
-
       res.json(participant);
     } catch (error) {
       console.error('[Routes] Error fetching participant:', error);
@@ -107,99 +99,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('[Admin] Error creating participant:', error);
       res.status(400).json({
         error: "Invalid participant data",
-        details: error instanceof Error ? error.message : undefined
-      });
-    }
-  });
-
-  // Deal management endpoints
-  app.post("/api/participants/:id/deals", requireAuth, async (req, res) => {
-    try {
-      const { id } = req.params;
-      console.log('[Routes] Adding deal - Request:', {
-        participantId: id,
-        body: req.body
-      });
-
-      const dealData = insertDealSchema.parse(req.body);
-
-      // Generate a unique deal ID and add date
-      const deal = {
-        ...dealData,
-        dealId: `${Date.now()}-${randomBytes(4).toString('hex')}`,
-        date: new Date().toISOString()
-      };
-
-      console.log('[Routes] Parsed deal data:', deal);
-
-      const participant = await storage.addDeal(parseInt(id), deal);
-
-      console.log('[Routes] Deal added successfully:', {
-        participantId: id,
-        dealId: deal.dealId,
-        updatedDealHistoryLength: participant.dealHistory.length
-      });
-
-      res.json({
-        success: true,
-        participant,
-        addedDeal: deal
-      });
-    } catch (error) {
-      console.error('[Routes] Error adding deal:', error);
-      res.status(400).json({
-        error: "Failed to add deal",
-        details: error instanceof Error ? error.message : undefined
-      });
-    }
-  });
-
-  app.delete("/api/participants/:id/deals/:dealId", requireAuth, async (req, res) => {
-    try {
-      console.log('[Admin] Removing deal:', req.params.dealId);
-      const { id, dealId } = req.params;
-      const participant = await storage.removeDeal(parseInt(id), dealId);
-      console.log('[Admin] Deal removed');
-      res.json(participant);
-    } catch (error) {
-      console.error('[Admin] Error removing deal:', error);
-      res.status(400).json({
-        error: "Failed to remove deal",
-        details: error instanceof Error ? error.message : undefined
-      });
-    }
-  });
-
-  // Bulk deal operations
-  app.delete("/api/participants/:id/deals", requireAuth, async (req, res) => {
-    try {
-      console.log('[Admin] Bulk deleting deals:', req.body.dealIds);
-      const { id } = req.params;
-      const { dealIds } = req.body;
-      const participant = await storage.removeManyDeals(parseInt(id), dealIds);
-      console.log('[Admin] Deals deleted');
-      res.json(participant);
-    } catch (error) {
-      console.error('[Admin] Error bulk deleting deals:', error);
-      res.status(400).json({
-        error: "Failed to delete deals",
-        details: error instanceof Error ? error.message : undefined
-      });
-    }
-  });
-
-  app.patch("/api/participants/:id/deals", requireAuth, async (req, res) => {
-    try {
-      console.log('[Admin] Bulk updating deals:', req.body);
-      const { id } = req.params;
-      const { dealIds, title } = req.body;
-      const participant = await storage.updateManyDeals(parseInt(id), dealIds, { title });
-      console.log('[Admin] Deals updated');
-      res.json(participant);
-    } catch (error) {
-      console.error('[Admin] Error bulk updating deals:', error);
-      res.status(400).json({
-        error: "Failed to update deals",
         details: error instanceof Error ? error.message : undefined
       });
     }

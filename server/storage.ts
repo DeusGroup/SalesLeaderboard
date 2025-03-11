@@ -1,4 +1,4 @@
-import { InsertParticipant, Participant, Admin, participants, admin, Deal } from "@shared/schema";
+import { InsertParticipant, Participant, Admin, participants, admin } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 import session from "express-session";
@@ -27,10 +27,6 @@ export interface IStorage {
   ): Promise<void>;
   deleteParticipant(id: number): Promise<void>;
   getAdminByUsername(username: string): Promise<Admin | undefined>;
-  addDeal(id: number, deal: Deal): Promise<Participant>;
-  removeDeal(id: number, dealId: string): Promise<Participant>;
-  removeManyDeals(id: number, dealIds: string[]): Promise<Participant>;
-  updateManyDeals(id: number, dealIds: string[], data: { title: string }): Promise<Participant>;
   sessionStore: session.Store;
 }
 
@@ -42,37 +38,6 @@ export class DatabaseStorage implements IStorage {
       pool,
       createTableIfMissing: true,
     });
-  }
-
-  private ensureValidDealHistory(dealHistory: any): Deal[] {
-    // If dealHistory is null or undefined, return empty array
-    if (!dealHistory) {
-      console.log('[Storage] Deal history is null/undefined, initializing empty array');
-      return [];
-    }
-
-    // If dealHistory is a string, try to parse it
-    if (typeof dealHistory === 'string') {
-      try {
-        const parsed = JSON.parse(dealHistory);
-        if (Array.isArray(parsed)) {
-          console.log('[Storage] Successfully parsed deal history string:', parsed.length);
-          return parsed;
-        }
-      } catch (e) {
-        console.error('[Storage] Failed to parse deal history string:', e);
-      }
-      return [];
-    }
-
-    // If dealHistory is already an array, return it
-    if (Array.isArray(dealHistory)) {
-      console.log('[Storage] Deal history is already an array:', dealHistory.length);
-      return dealHistory;
-    }
-
-    console.log('[Storage] Unknown deal history format, returning empty array');
-    return [];
   }
 
   async getParticipant(id: number): Promise<Participant | undefined> {
@@ -88,39 +53,15 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
 
-    // Process dealHistory
-    participant.dealHistory = this.ensureValidDealHistory(participant.dealHistory);
-
-    console.log('[Storage] Participant found:', {
-      id: participant.id,
-      dealHistoryLength: participant.dealHistory.length,
-      deals: participant.dealHistory
-    });
-
     return participant;
   }
 
   async getParticipantsByScore(): Promise<Participant[]> {
     console.log('[Storage] Fetching all participants');
-
-    const allParticipants = await db
+    return db
       .select()
       .from(participants)
       .orderBy(desc(participants.score));
-
-    // Ensure dealHistory is properly handled for all participants
-    const processedParticipants = allParticipants.map(participant => ({
-      ...participant,
-      dealHistory: this.ensureValidDealHistory(participant.dealHistory)
-    }));
-
-    console.log('[Storage] Found participants:', {
-      count: processedParticipants.length,
-      participantsWithDeals: processedParticipants.filter(p => p.dealHistory.length > 0).length,
-      firstParticipantDeals: processedParticipants[0]?.dealHistory?.length
-    });
-
-    return processedParticipants;
   }
 
   async createParticipant(participant: InsertParticipant): Promise<Participant> {
@@ -188,168 +129,6 @@ export class DatabaseStorage implements IStorage {
       .from(admin)
       .where(eq(admin.username, username));
     return foundAdmin;
-  }
-
-  async addDeal(id: number, deal: Deal): Promise<Participant> {
-    console.log('[Storage] Adding deal:', { participantId: id, deal });
-
-    const participant = await this.getParticipant(id);
-    if (!participant) throw new Error("Participant not found");
-
-    // Get current deal history and ensure it's an array
-    const currentDealHistory = this.ensureValidDealHistory(participant.dealHistory);
-
-    // Add new deal
-    const updatedDealHistory = [...currentDealHistory, deal];
-
-    // Update metrics based on deal type
-    const metrics: any = {
-      totalDeals: (participant.totalDeals || 0) + 1
-    };
-
-    switch (deal.type) {
-      case 'BOARD':
-        metrics.boardRevenue = (participant.boardRevenue || 0) + deal.amount;
-        break;
-      case 'MSP':
-        metrics.mspRevenue = (participant.mspRevenue || 0) + deal.amount;
-        break;
-      case 'VOICE':
-        metrics.voiceSeats = (participant.voiceSeats || 0) + Math.floor(deal.amount);
-        break;
-    }
-
-    console.log('[Storage] Updating participant:', {
-      id,
-      metrics,
-      dealHistoryLength: updatedDealHistory.length,
-      dealHistory: updatedDealHistory
-    });
-
-    // Update participant with new deal and metrics
-    await db
-      .update(participants)
-      .set({
-        ...metrics,
-        dealHistory: updatedDealHistory
-      })
-      .where(eq(participants.id, id));
-
-    // Update metrics to recalculate score
-    await this.updateParticipantMetrics(id, metrics);
-
-    // Fetch and return updated participant
-    const updatedParticipant = await this.getParticipant(id);
-    if (!updatedParticipant) throw new Error("Failed to fetch updated participant");
-
-    return updatedParticipant;
-  }
-
-  async removeDeal(id: number, dealId: string): Promise<Participant> {
-    const participant = await this.getParticipant(id);
-    if (!participant) throw new Error("Participant not found");
-
-    const dealToRemove = participant.dealHistory?.find(d => d.dealId === dealId);
-    if (!dealToRemove) throw new Error("Deal not found");
-
-    // Update metrics based on removed deal
-    const metrics: any = {
-      totalDeals: (participant.totalDeals || 0) - 1
-    };
-
-    switch (dealToRemove.type) {
-      case 'BOARD':
-        metrics.boardRevenue = (participant.boardRevenue || 0) - dealToRemove.amount;
-        break;
-      case 'MSP':
-        metrics.mspRevenue = (participant.mspRevenue || 0) - dealToRemove.amount;
-        break;
-      case 'VOICE':
-        metrics.voiceSeats = (participant.voiceSeats || 0) - Math.floor(dealToRemove.amount);
-        break;
-    }
-
-    // Update participant
-    await db
-      .update(participants)
-      .set({
-        ...metrics,
-        dealHistory: participant.dealHistory?.filter(d => d.dealId !== dealId) || []
-      })
-      .where(eq(participants.id, id));
-
-    // Update metrics to recalculate score
-    await this.updateParticipantMetrics(id, metrics);
-
-    // Return updated participant
-    return await this.getParticipant(id) as Participant;
-  }
-
-  async removeManyDeals(id: number, dealIds: string[]): Promise<Participant> {
-    const participant = await this.getParticipant(id);
-    if (!participant) throw new Error("Participant not found");
-
-    const dealsToRemove = participant.dealHistory?.filter(d => dealIds.includes(d.dealId)) || [];
-
-    // Calculate total metrics adjustment
-    const metrics = dealsToRemove.reduce((acc, deal) => {
-      switch (deal.type) {
-        case 'BOARD':
-          acc.boardRevenue = (acc.boardRevenue || 0) - deal.amount;
-          break;
-        case 'MSP':
-          acc.mspRevenue = (acc.mspRevenue || 0) - deal.amount;
-          break;
-        case 'VOICE':
-          acc.voiceSeats = (acc.voiceSeats || 0) - Math.floor(deal.amount);
-          break;
-      }
-      return acc;
-    }, {
-      totalDeals: -dealsToRemove.length,
-      boardRevenue: 0,
-      mspRevenue: 0,
-      voiceSeats: 0
-    });
-
-    // Update participant
-    await db
-      .update(participants)
-      .set({
-        boardRevenue: (participant.boardRevenue || 0) + (metrics.boardRevenue || 0),
-        mspRevenue: (participant.mspRevenue || 0) + (metrics.mspRevenue || 0),
-        voiceSeats: (participant.voiceSeats || 0) + (metrics.voiceSeats || 0),
-        totalDeals: (participant.totalDeals || 0) + metrics.totalDeals,
-        dealHistory: participant.dealHistory?.filter(d => !dealIds.includes(d.dealId)) || []
-      })
-      .where(eq(participants.id, id));
-
-    // Update metrics to recalculate score
-    await this.updateParticipantMetrics(id, {
-      boardRevenue: (participant.boardRevenue || 0) + (metrics.boardRevenue || 0),
-      mspRevenue: (participant.mspRevenue || 0) + (metrics.mspRevenue || 0),
-      voiceSeats: (participant.voiceSeats || 0) + (metrics.voiceSeats || 0),
-      totalDeals: (participant.totalDeals || 0) + metrics.totalDeals
-    });
-
-    // Return updated participant
-    return await this.getParticipant(id) as Participant;
-  }
-
-  async updateManyDeals(id: number, dealIds: string[], data: { title: string }): Promise<Participant> {
-    const participant = await this.getParticipant(id);
-    if (!participant) throw new Error("Participant not found");
-
-    const updatedDealHistory = participant.dealHistory?.map(deal =>
-      dealIds.includes(deal.dealId) ? { ...deal, ...data } : deal
-    ) || [];
-
-    await db
-      .update(participants)
-      .set({ dealHistory: updatedDealHistory })
-      .where(eq(participants.id, id));
-
-    return await this.getParticipant(id) as Participant;
   }
 }
 

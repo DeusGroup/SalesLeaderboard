@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { insertParticipantSchema, insertDealSchema } from "@shared/schema";
-import type { Participant, InsertDeal, Deal } from "@shared/schema"; // Added Deal type import
+import { insertParticipantSchema } from "@shared/schema";
+import type { Participant } from "@shared/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trophy, Plus, Trash2, Target, Calendar } from "lucide-react";
+import { Trophy, Plus, Trash2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -20,16 +20,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
+
 
 export function AdminDashboard() {
   const { logoutMutation } = useAuth();
   const { toast } = useToast();
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
-  const [selectedParticipantId, setSelectedParticipantId] = useState<string>("");
-  const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
 
   const calculateProgress = (current: number, goal: number) => {
     if (!goal) return 0;
@@ -52,150 +49,11 @@ export function AdminDashboard() {
     },
   });
 
-  const dealForm = useForm<InsertDeal>({
-    resolver: zodResolver(insertDealSchema),
-    defaultValues: {
-      title: "",
-      amount: 0,
-      type: "BOARD",
-    },
-  });
-
-  // Fix participant query to properly handle deal history
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/participants"],
     retry: 1,
     refetchOnMount: true,
   });
-
-  // Modified participant query with correct typing and data processing
-  const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
-    queryKey: ["/api/participants", selectedParticipantId],
-    enabled: !!selectedParticipantId,
-    retry: 1,
-    refetchOnMount: true,
-    refetchInterval: 5000, // Poll every 5 seconds
-    select: (data) => {
-      if (!data) return null;
-      console.log('[Admin Dashboard] Raw participant data:', {
-        id: data.id,
-        name: data.name,
-        dealHistory: data.dealHistory,
-        dealCount: data.dealHistory?.length
-      });
-      return data;
-    }
-  });
-
-  const addDealMutation = useMutation({
-    mutationFn: async (data: { participantId: string; deal: InsertDeal }) => {
-      console.log('[Admin Dashboard] Adding deal:', data);
-      const res = await apiRequest("POST", `/api/participants/${data.participantId}/deals`, data.deal);
-      return res.json();
-    },
-    onSuccess: (data) => {
-      console.log('[Admin Dashboard] Deal added successfully:', data);
-      queryClient.invalidateQueries({
-        queryKey: ["/api/participants"],
-        exact: true
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["/api/participants", selectedParticipantId],
-        exact: true
-      });
-      dealForm.reset();
-      toast({
-        title: "Success",
-        description: "Deal added successfully",
-      });
-    }
-  });
-
-  const renderDealHistory = () => {
-    console.log('[Admin Dashboard] Render History:', {
-      participant: selectedParticipant,
-      dealHistory: selectedParticipant?.dealHistory,
-      deals: Array.isArray(selectedParticipant?.dealHistory) 
-        ? selectedParticipant.dealHistory.length 
-        : 'Not an array'
-    });
-
-    if (!selectedParticipantId) {
-      return <div className="text-sm text-muted-foreground text-center py-4">
-        Select a participant to view their deal history
-      </div>;
-    }
-
-    if (isLoadingParticipant) {
-      return <div className="text-sm text-muted-foreground text-center py-4">
-        Loading deal history...
-      </div>;
-    }
-
-    if (!selectedParticipant) {
-      return <div className="text-sm text-muted-foreground text-center py-4">
-        No participant data available
-      </div>;
-    }
-
-    // Ensure dealHistory is an array
-    const deals = selectedParticipant.dealHistory || [];
-
-    return (
-      <div className="space-y-3 max-h-[600px] overflow-y-auto">
-        {deals.length > 0 ? (
-          deals.map((deal) => (
-            <div key={deal.dealId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
-              <Checkbox
-                checked={selectedDeals.includes(deal.dealId)}
-                onCheckedChange={(checked) => {
-                  setSelectedDeals(
-                    checked
-                      ? [...selectedDeals, deal.dealId]
-                      : selectedDeals.filter(id => id !== deal.dealId)
-                  );
-                }}
-              />
-              <div className="flex-1">
-                <h4 className="font-medium text-sm">{deal.title}</h4>
-                <div className="flex items-center gap-4 mt-1">
-                  <p className="text-sm text-muted-foreground">
-                    ${deal.amount.toLocaleString()}
-                  </p>
-                  <span className="text-xs text-primary">{deal.type}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  {new Date(deal.date).toLocaleDateString()}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  onClick={() => {
-                    if (confirm('Are you sure you want to remove this deal?')) {
-                      removeDealMutation.mutate({
-                        participantId: selectedParticipantId,
-                        dealId: deal.dealId
-                      });
-                    }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="text-sm text-muted-foreground text-center py-4">
-            No deals recorded yet
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const updateMetricsMutation = useMutation({
     mutationFn: async (data: {
@@ -248,17 +106,19 @@ export function AdminDashboard() {
     },
   });
 
-  const removeDealMutation = useMutation({
-    mutationFn: async ({ participantId, dealId }: { participantId: string; dealId: string }) => {
-      const res = await apiRequest("DELETE", `/api/participants/${participantId}/deals/${dealId}`);
+  const createParticipantMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/participants", data);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
       toast({
         title: "Success",
-        description: "Deal removed successfully",
+        description: "Participant added successfully",
       });
+      setIsAddUserDialogOpen(false);
+      participantForm.reset();
     },
     onError: (error: Error) => {
       toast({
@@ -268,89 +128,6 @@ export function AdminDashboard() {
       });
     },
   });
-
-  const bulkDealMutation = useMutation({
-    mutationFn: async ({ participantId, dealIds, action, data }: {
-      participantId: string;
-      dealIds: string[];
-      action: 'delete' | 'update';
-      data?: { title?: string }
-    }) => {
-      const res = await apiRequest(
-        action === 'delete' ? "DELETE" : "PATCH",
-        `/api/participants/${participantId}/deals`,
-        { dealIds, ...(data || {}) }
-      );
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
-      setSelectedDeals([]);
-      toast({
-        title: "Success",
-        description: "Deals updated successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleBulkAction = (action: 'delete' | 'update') => {
-    if (!selectedDeals.length) {
-      toast({
-        title: "Error",
-        description: "Please select at least one deal",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (action === 'delete') {
-      if (confirm(`Are you sure you want to delete ${selectedDeals.length} deal(s)?`)) {
-        bulkDealMutation.mutate({
-          participantId: selectedParticipantId,
-          dealIds: selectedDeals,
-          action: 'delete'
-        });
-      }
-    } else {
-      const newTitle = prompt('Enter new title for selected deals:');
-      if (newTitle) {
-        bulkDealMutation.mutate({
-          participantId: selectedParticipantId,
-          dealIds: selectedDeals,
-          action: 'update',
-          data: { title: newTitle }
-        });
-      }
-    }
-  };
-
-  const handleDealSubmit = (data: InsertDeal) => {
-    console.log('[Admin Dashboard] Submitting deal form:', {
-      formData: data,
-      selectedParticipantId
-    });
-
-    if (!selectedParticipantId) {
-      toast({
-        title: "Error",
-        description: "Please select a participant",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    addDealMutation.mutate({
-      participantId: selectedParticipantId,
-      deal: data,
-    });
-  };
 
 
   return (
@@ -376,7 +153,6 @@ export function AdminDashboard() {
         <Tabs defaultValue="metrics" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="metrics" className="text-base">Performance Metrics</TabsTrigger>
-            <TabsTrigger value="deals" className="text-base">Deal Management</TabsTrigger>
           </TabsList>
 
           <TabsContent value="metrics">
@@ -616,106 +392,6 @@ export function AdminDashboard() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="deals">
-            <div className="grid gap-8 lg:grid-cols-2">
-              <div className="bg-white rounded-lg border p-6">
-                <h3 className="text-lg font-semibold mb-4">Add New Deal</h3>
-                <form
-                  onSubmit={dealForm.handleSubmit(handleDealSubmit)}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <Label>Select Participant</Label>
-                    <Select
-                      value={selectedParticipantId}
-                      onValueChange={setSelectedParticipantId}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a participant" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {participants?.map((participant) => (
-                          <SelectItem
-                            key={participant.id}
-                            value={participant.id.toString()}
-                          >
-                            {participant.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Deal Title</Label>
-                    <Input
-                      id="title"
-                      {...dealForm.register("title")}
-                      placeholder="Enter deal title"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Amount ($)</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      {...dealForm.register("amount", { valueAsNumber: true })}
-                      placeholder="Enter deal amount"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Deal Type</Label>
-                    <Select
-                      defaultValue={dealForm.getValues("type")}
-                      onValueChange={(value: "BOARD" | "MSP" | "VOICE") =>
-                        dealForm.setValue("type", value)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select deal type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="BOARD">Board Revenue</SelectItem>
-                        <SelectItem value="MSP">MSP Revenue</SelectItem>
-                        <SelectItem value="VOICE">Voice Seats</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button type="submit" className="w-full">
-                    Add Deal
-                  </Button>
-                </form>
-              </div>
-
-              <div className="bg-white rounded-lg border p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Deal History</h3>
-                  {selectedDeals.length > 0 && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => handleBulkAction('update')}
-                      >
-                        Edit Selected
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => handleBulkAction('delete')}
-                      >
-                        Delete Selected ({selectedDeals.length})
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                {renderDealHistory()}
               </div>
             </div>
           </TabsContent>
