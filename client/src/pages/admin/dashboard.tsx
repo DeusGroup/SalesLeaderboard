@@ -61,29 +61,29 @@ export function AdminDashboard() {
     },
   });
 
-  // Fix participant queries with proper typing
+  // Fix participant query to properly handle deal history
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/participants"],
     retry: 1,
     refetchOnMount: true,
-    refetchOnWindowFocus: true
   });
 
-  // Fix selected participant query with proper type casting
+  // Modified participant query with correct typing and data processing
   const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
     retry: 1,
+    refetchOnMount: true,
+    refetchInterval: 5000, // Poll every 5 seconds
     select: (data) => {
-      console.log('[Admin Dashboard] Raw participant data:', data);
       if (!data) return null;
-
-      // Ensure dealHistory is properly handled
-      const dealHistory = data.dealHistory || [];
-      return {
-        ...data,
-        dealHistory: Array.isArray(dealHistory) ? dealHistory : []
-      };
+      console.log('[Admin Dashboard] Raw participant data:', {
+        id: data.id,
+        name: data.name,
+        dealHistory: data.dealHistory,
+        dealCount: data.dealHistory?.length
+      });
+      return data;
     }
   });
 
@@ -112,51 +112,40 @@ export function AdminDashboard() {
   });
 
   const renderDealHistory = () => {
-    console.log('[Admin Dashboard] Rendering deal history:', {
-      selectedParticipantId,
+    console.log('[Admin Dashboard] Render History:', {
       participant: selectedParticipant,
       dealHistory: selectedParticipant?.dealHistory,
-      dealCount: selectedParticipant?.dealHistory?.length || 0
+      deals: Array.isArray(selectedParticipant?.dealHistory) 
+        ? selectedParticipant.dealHistory.length 
+        : 'Not an array'
     });
 
     if (!selectedParticipantId) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          Select a participant to view their deal history
-        </div>
-      );
+      return <div className="text-sm text-muted-foreground text-center py-4">
+        Select a participant to view their deal history
+      </div>;
     }
 
     if (isLoadingParticipant) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          Loading deal history...
-        </div>
-      );
+      return <div className="text-sm text-muted-foreground text-center py-4">
+        Loading deal history...
+      </div>;
     }
 
     if (!selectedParticipant) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          No participant data available
-        </div>
-      );
+      return <div className="text-sm text-muted-foreground text-center py-4">
+        No participant data available
+      </div>;
     }
 
+    // Ensure dealHistory is an array
     const deals = selectedParticipant.dealHistory || [];
-    console.log('[Admin Dashboard] Processing deals:', {
-      dealsCount: deals.length,
-      deals
-    });
 
     return (
       <div className="space-y-3 max-h-[600px] overflow-y-auto">
         {deals.length > 0 ? (
           deals.map((deal) => (
-            <div
-              key={deal.dealId}
-              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
-            >
+            <div key={deal.dealId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
               <Checkbox
                 checked={selectedDeals.includes(deal.dealId)}
                 onCheckedChange={(checked) => {
