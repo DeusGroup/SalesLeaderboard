@@ -193,206 +193,211 @@ export function AdminDashboard() {
               </div>
 
               <div className="space-y-4">
-                <div className="grid grid-cols-4 gap-8 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
-                  <div>Name</div>
-                  <div>Board Revenue</div>
-                  <div>MSP Revenue</div>
-                  <div>Voice Seats</div>
-                </div>
-
-                {participants?.map((participant) => (
-                  <div key={participant.id} className="space-y-6 p-4 rounded-lg border bg-white">
-                    <div className="flex items-center justify-between">
-                      <Link href={`/admin/profile/${participant.id}`}>
-                        <a className="flex items-center gap-2 hover:text-primary">
-                          {participant.avatarUrl ? (
-                            <img
-                              src={participant.avatarUrl}
-                              alt={participant.name}
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
-                              {participant.name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <span className="font-medium">{participant.name}</span>
-                        </a>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => {
-                          if (confirm(`Are you sure you want to delete ${participant.name}?`)) {
-                            deleteParticipantMutation.mutate(participant.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-8">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            className="w-full"
-                            placeholder="Current Revenue"
-                            defaultValue={participant.boardRevenue}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateMetricsMutation.mutate({
-                                  id: participant.id,
-                                  boardRevenue: value
-                                });
-                              }
-                            }}
-                          />
-                          <Target className="h-4 w-4 text-gray-400" />
-                          <Input
-                            type="number"
-                            className="w-full"
-                            placeholder="Goal"
-                            defaultValue={participant.boardRevenueGoal}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateMetricsMutation.mutate({
-                                  id: participant.id,
-                                  boardRevenueGoal: value
-                                });
-                              }
-                            }}
-                          />
-                        </div>
-                        <Progress value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)} />
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            className="w-full"
-                            placeholder="Current MSP"
-                            defaultValue={participant.mspRevenue}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateMetricsMutation.mutate({
-                                  id: participant.id,
-                                  mspRevenue: value
-                                });
-                              }
-                            }}
-                          />
-                          <Target className="h-4 w-4 text-gray-400" />
-                          <Input
-                            type="number"
-                            className="w-full"
-                            placeholder="Goal"
-                            defaultValue={participant.mspRevenueGoal}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateMetricsMutation.mutate({
-                                  id: participant.id,
-                                  mspRevenueGoal: value
-                                });
-                              }
-                            }}
-                          />
-                        </div>
-                        <Progress value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)} />
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            className="w-full"
-                            placeholder="Current Seats"
-                            defaultValue={participant.voiceSeats}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateMetricsMutation.mutate({
-                                  id: participant.id,
-                                  voiceSeats: value
-                                });
-                              }
-                            }}
-                          />
-                          <Target className="h-4 w-4 text-gray-400" />
-                          <Input
-                            type="number"
-                            className="w-full"
-                            placeholder="Goal"
-                            defaultValue={participant.voiceSeatsGoal}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateMetricsMutation.mutate({
-                                  id: participant.id,
-                                  voiceSeatsGoal: value
-                                });
-                              }
-                            }}
-                          />
-                        </div>
-                        <Progress value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)} />
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            className="w-full"
-                            placeholder="Current Deals"
-                            defaultValue={participant.totalDeals}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateMetricsMutation.mutate({
-                                  id: participant.id,
-                                  totalDeals: value
-                                });
-                              }
-                            }}
-                          />
-                          <Target className="h-4 w-4 text-gray-400" />
-                          <Input
-                            type="number"
-                            className="w-full"
-                            placeholder="Goal"
-                            defaultValue={participant.totalDealsGoal}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateMetricsMutation.mutate({
-                                  id: participant.id,
-                                  totalDealsGoal: value
-                                });
-                              }
-                            }}
-                          />
-                        </div>
-                        <Progress value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)} />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <div className="bg-primary/10 rounded-lg px-3 py-1">
-                        <span className="font-bold text-primary">
-                          {participant.score.toLocaleString()} points
-                        </span>
-                      </div>
-                    </div>
+                  {/* Header Row */}
+                  <div className="grid grid-cols-4 gap-8 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
+                    <div>Name</div>
+                    <div>Board Revenue</div>
+                    <div>MSP Revenue</div>
+                    <div>Voice Seats</div>
                   </div>
-                ))}
-              </div>
+
+                  {participants?.map((participant) => (
+                    <div key={participant.id} className="space-y-6 p-4 rounded-lg border bg-white">
+                      <div className="flex items-center justify-between">
+                        <Link href={`/admin/profile/${participant.id}`}>
+                          <a className="flex items-center gap-2 hover:text-primary">
+                            {participant.avatarUrl ? (
+                              <img
+                                src={participant.avatarUrl}
+                                alt={participant.name}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
+                                {participant.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className="font-medium">{participant.name}</span>
+                          </a>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete ${participant.name}?`)) {
+                              deleteParticipantMutation.mutate(participant.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-8">
+                        {/* Board Revenue */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              className="w-[150px]"
+                              placeholder="Current Revenue"
+                              defaultValue={participant.boardRevenue}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  updateMetricsMutation.mutate({
+                                    id: participant.id,
+                                    boardRevenue: value
+                                  });
+                                }
+                              }}
+                            />
+                            <Target className="h-4 w-4 text-gray-400" />
+                            <Input
+                              type="number"
+                              className="w-[150px]"
+                              placeholder="Goal"
+                              defaultValue={participant.boardRevenueGoal}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  updateMetricsMutation.mutate({
+                                    id: participant.id,
+                                    boardRevenueGoal: value
+                                  });
+                                }
+                              }}
+                            />
+                          </div>
+                          <Progress value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)} />
+                        </div>
+
+                        {/* MSP Revenue */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              className="w-[150px]"
+                              placeholder="Current MSP"
+                              defaultValue={participant.mspRevenue}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  updateMetricsMutation.mutate({
+                                    id: participant.id,
+                                    mspRevenue: value
+                                  });
+                                }
+                              }}
+                            />
+                            <Target className="h-4 w-4 text-gray-400" />
+                            <Input
+                              type="number"
+                              className="w-[150px]"
+                              placeholder="Goal"
+                              defaultValue={participant.mspRevenueGoal}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  updateMetricsMutation.mutate({
+                                    id: participant.id,
+                                    mspRevenueGoal: value
+                                  });
+                                }
+                              }}
+                            />
+                          </div>
+                          <Progress value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)} />
+                        </div>
+
+                        {/* Voice Seats */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              className="w-[150px]"
+                              placeholder="Current Seats"
+                              defaultValue={participant.voiceSeats}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  updateMetricsMutation.mutate({
+                                    id: participant.id,
+                                    voiceSeats: value
+                                  });
+                                }
+                              }}
+                            />
+                            <Target className="h-4 w-4 text-gray-400" />
+                            <Input
+                              type="number"
+                              className="w-[150px]"
+                              placeholder="Goal"
+                              defaultValue={participant.voiceSeatsGoal}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  updateMetricsMutation.mutate({
+                                    id: participant.id,
+                                    voiceSeatsGoal: value
+                                  });
+                                }
+                              }}
+                            />
+                          </div>
+                          <Progress value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)} />
+                        </div>
+
+                        {/* Total Deals */}
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              className="w-[150px]"
+                              placeholder="Current Deals"
+                              defaultValue={participant.totalDeals}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  updateMetricsMutation.mutate({
+                                    id: participant.id,
+                                    totalDeals: value
+                                  });
+                                }
+                              }}
+                            />
+                            <Target className="h-4 w-4 text-gray-400" />
+                            <Input
+                              type="number"
+                              className="w-[150px]"
+                              placeholder="Goal"
+                              defaultValue={participant.totalDealsGoal}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                if (!isNaN(value)) {
+                                  updateMetricsMutation.mutate({
+                                    id: participant.id,
+                                    totalDealsGoal: value
+                                  });
+                                }
+                              }}
+                            />
+                          </div>
+                          <Progress value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)} />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <div className="bg-primary/10 rounded-lg px-3 py-1">
+                          <span className="font-bold text-primary">
+                            {participant.score.toLocaleString()} points
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
             </div>
           </TabsContent>
         </Tabs>
