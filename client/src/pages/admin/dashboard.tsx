@@ -89,7 +89,6 @@ export function AdminDashboard() {
     }
   });
 
-  // Improve debuggability of deal management
   const addDealMutation = useMutation({
     mutationFn: async (data: { participantId: string; deal: InsertDeal }) => {
       console.log('[Admin Dashboard] Adding deal:', data);
@@ -304,7 +303,7 @@ export function AdminDashboard() {
       );
     }
 
-    if (!selectedParticipant?.dealHistory) {
+    if (!selectedParticipant || !selectedParticipant.dealHistory) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
           No deals available
@@ -647,7 +646,6 @@ export function AdminDashboard() {
             <div className="grid gap-8 lg:grid-cols-2">
               <div className="bg-white rounded-lg border p-6">
                 <h3 className="text-lg font-semibold mb-4">Add New Deal</h3>
-                {/* Update form to use the new submit handler */}
                 <form
                   onSubmit={dealForm.handleSubmit(handleDealSubmit)}
                   className="space-y-4"
