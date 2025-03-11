@@ -61,20 +61,29 @@ export function AdminDashboard() {
     },
   });
 
-  // Fix participant queries with proper typing
+  // Fix participant queries with proper typing and caching strategy
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/participants"],
     retry: 1,
-    refetchOnMount: true
+    refetchOnMount: true,
+    onSuccess: (data) => {
+      console.log('[Admin Dashboard] Participants loaded:', data);
+    }
   });
 
-  // Fix selected participant query
+  // Fix selected participant query with proper data handling
   const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
     retry: 1,
     refetchOnMount: true,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    onSuccess: (data) => {
+      console.log('[Admin Dashboard] Selected participant data:', {
+        id: data?.id,
+        dealHistory: data?.dealHistory
+      });
+    }
   });
 
   // Add debug logging for deal submission
@@ -236,7 +245,6 @@ export function AdminDashboard() {
     }
   };
 
-
   const handleDealSubmit = (data: InsertDeal) => {
     console.log('[Admin Dashboard] Submitting deal form:', {
       formData: data,
@@ -258,8 +266,14 @@ export function AdminDashboard() {
     });
   };
 
-  // Fix deal history rendering
+  // Fix deal history rendering logic
   const renderDealHistory = () => {
+    console.log('[Admin Dashboard] Rendering deal history:', {
+      selectedParticipantId,
+      participant: selectedParticipant,
+      dealHistory: selectedParticipant?.dealHistory
+    });
+
     if (!selectedParticipantId) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
@@ -276,7 +290,6 @@ export function AdminDashboard() {
       );
     }
 
-    // Ensure we have the participant data
     if (!selectedParticipant) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
@@ -285,8 +298,8 @@ export function AdminDashboard() {
       );
     }
 
-    // Ensure dealHistory is an array
-    const deals = Array.isArray(selectedParticipant.dealHistory) ? selectedParticipant.dealHistory : [];
+    const deals = selectedParticipant.dealHistory || [];
+    console.log('[Admin Dashboard] Deals to render:', deals);
 
     return (
       <div className="space-y-3 max-h-[600px] overflow-y-auto">
