@@ -99,10 +99,10 @@ export default function LeaderboardPage() {
                           <div className="font-semibold text-gray-900 text-lg leading-none pt-3">
                             ${participant.boardRevenue.toLocaleString()}
                           </div>
-                          <div className="self-end relative">
-                            <div className="absolute -left-16 top-1/2 -translate-y-1/2 text-xs text-gray-600 whitespace-nowrap">
-                              Goal Progress
-                            </div>
+                          <div className="self-end relative group">
+                            <span className="text-xs text-gray-500 absolute -left-[60px] top-1/2 -translate-y-1/2">
+                              Goal →
+                            </span>
                             <Progress
                               value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
                               className="h-2 bg-gray-100"
