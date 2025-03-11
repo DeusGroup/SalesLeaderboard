@@ -69,16 +69,21 @@ export function AdminDashboard() {
     refetchOnWindowFocus: true
   });
 
-  // Fix selected participant query type and add debug logging
+  // Fix selected participant query with proper type casting
   const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
     retry: 1,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
     select: (data) => {
-      console.log('[Admin Dashboard] Selected participant raw data:', data);
-      return data;
+      console.log('[Admin Dashboard] Raw participant data:', data);
+      if (!data) return null;
+
+      // Ensure dealHistory is properly handled
+      const dealHistory = data.dealHistory || [];
+      return {
+        ...data,
+        dealHistory: Array.isArray(dealHistory) ? dealHistory : []
+      };
     }
   });
 
@@ -138,18 +143,11 @@ export function AdminDashboard() {
       );
     }
 
-    let deals: Deal[] = [];
-    try {
-      deals = Array.isArray(selectedParticipant.dealHistory)
-        ? selectedParticipant.dealHistory
-        : typeof selectedParticipant.dealHistory === 'string'
-          ? JSON.parse(selectedParticipant.dealHistory)
-          : [];
-
-      console.log('[Admin Dashboard] Processed deals:', deals);
-    } catch (e) {
-      console.error('[Admin Dashboard] Error processing deals:', e);
-    }
+    const deals = selectedParticipant.dealHistory || [];
+    console.log('[Admin Dashboard] Processing deals:', {
+      dealsCount: deals.length,
+      deals
+    });
 
     return (
       <div className="space-y-3 max-h-[600px] overflow-y-auto">
