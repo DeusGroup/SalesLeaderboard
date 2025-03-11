@@ -72,7 +72,7 @@ export function AdminDashboard() {
     }
   });
 
-  // Improve debuggability of participant selection
+  // Improve participant query typing and debugging
   const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
@@ -89,6 +89,7 @@ export function AdminDashboard() {
     }
   });
 
+  // Improve deal mutation handling
   const addDealMutation = useMutation({
     mutationFn: async (data: { participantId: string; deal: InsertDeal }) => {
       console.log('[Admin Dashboard] Adding deal:', data);
@@ -99,6 +100,7 @@ export function AdminDashboard() {
     },
     onSuccess: (data) => {
       console.log('[Admin Dashboard] Deal added successfully:', data);
+      // Force refetch both queries
       queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
       if (selectedParticipantId) {
         queryClient.invalidateQueries({ 
@@ -278,7 +280,7 @@ export function AdminDashboard() {
     });
   };
 
-  // Improve deal history rendering with better debugging
+  // Update the deal history rendering logic
   const renderDealHistory = () => {
     console.log('[Admin Dashboard] Rendering deal history:', {
       selectedParticipantId,
@@ -303,15 +305,15 @@ export function AdminDashboard() {
       );
     }
 
-    if (!selectedParticipant || !selectedParticipant.dealHistory) {
+    if (!selectedParticipant) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
-          No deals available
+          No participant data available
         </div>
       );
     }
 
-    const deals = selectedParticipant.dealHistory;
+    const deals = selectedParticipant.dealHistory || [];
     console.log('[Admin Dashboard] Deals to render:', deals);
 
     if (deals.length === 0) {
