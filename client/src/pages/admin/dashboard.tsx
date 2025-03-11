@@ -79,7 +79,8 @@ export function AdminDashboard() {
       console.log('[Admin Dashboard] Loaded selected participant:', {
         id: data?.id,
         name: data?.name,
-        dealHistoryCount: data?.dealHistory?.length
+        dealHistory: data?.dealHistory,
+        dealHistoryLength: data?.dealHistory?.length
       });
     },
     onError: (error) => {
@@ -114,15 +115,18 @@ export function AdminDashboard() {
     mutationFn: async (data: { participantId: string; deal: InsertDeal }) => {
       console.log('[Admin Dashboard] Adding deal:', data);
       const res = await apiRequest("POST", `/api/participants/${data.participantId}/deals`, data.deal);
-      return res.json();
+      const result = await res.json();
+      console.log('[Admin Dashboard] Server response:', result);
+      return result;
     },
     onSuccess: (data) => {
       console.log('[Admin Dashboard] Deal added successfully:', data);
-      // Invalidate both the participants list and the selected participant
+      // Force refetch both queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
       if (selectedParticipantId) {
         queryClient.invalidateQueries({ 
-          queryKey: ["/api/participants", selectedParticipantId] 
+          queryKey: ["/api/participants", selectedParticipantId],
+          exact: true 
         });
       }
       dealForm.reset();
@@ -276,6 +280,13 @@ export function AdminDashboard() {
   };
 
   const renderDealHistory = () => {
+    console.log('[Admin Dashboard] Rendering deal history:', {
+      selectedParticipantId,
+      isLoadingParticipant,
+      selectedParticipant,
+      dealHistory: selectedParticipant?.dealHistory
+    });
+
     if (!selectedParticipantId) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
@@ -292,7 +303,7 @@ export function AdminDashboard() {
       );
     }
 
-    if (!selectedParticipant || !selectedParticipant.dealHistory) {
+    if (!selectedParticipant?.dealHistory) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
           No deals available
@@ -300,7 +311,9 @@ export function AdminDashboard() {
       );
     }
 
-    if (selectedParticipant.dealHistory.length === 0) {
+    const deals = selectedParticipant.dealHistory;
+
+    if (deals.length === 0) {
       return (
         <div className="text-sm text-muted-foreground text-center py-4">
           No deals recorded yet
@@ -310,7 +323,7 @@ export function AdminDashboard() {
 
     return (
       <div className="space-y-3 max-h-[600px] overflow-y-auto">
-        {selectedParticipant.dealHistory.map((deal) => (
+        {deals.map((deal) => (
           <div
             key={deal.dealId}
             className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"

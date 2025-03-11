@@ -131,10 +131,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[Admin] Final deal object:', deal);
 
       const participant = await storage.addDeal(parseInt(id), deal);
-      console.log('[Admin] Updated participant after deal addition:', participant);
-      console.log('[Admin] Deal history length:', participant.dealHistory?.length);
+      console.log('[Admin] Updated participant after deal addition:', {
+        id: participant?.id,
+        name: participant?.name,
+        dealHistory: participant?.dealHistory,
+        dealHistoryLength: participant?.dealHistory?.length
+      });
 
-      // Return the updated participant data
+      // Return the complete participant data
       res.json({
         success: true,
         participant,
