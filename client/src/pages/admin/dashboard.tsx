@@ -118,8 +118,13 @@ export function AdminDashboard() {
     },
     onSuccess: (data) => {
       console.log('[Admin Dashboard] Deal added successfully:', data);
+      // Invalidate both the participants list and the selected participant
       queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/participants", selectedParticipantId] });
+      if (selectedParticipantId) {
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/participants", selectedParticipantId] 
+        });
+      }
       dealForm.reset();
       toast({
         title: "Success",
@@ -268,6 +273,92 @@ export function AdminDashboard() {
         });
       }
     }
+  };
+
+  const renderDealHistory = () => {
+    if (!selectedParticipantId) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          Select a participant to view their deal history
+        </div>
+      );
+    }
+
+    if (isLoadingParticipant) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          Loading deal history...
+        </div>
+      );
+    }
+
+    if (!selectedParticipant || !selectedParticipant.dealHistory) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          No deals available
+        </div>
+      );
+    }
+
+    if (selectedParticipant.dealHistory.length === 0) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          No deals recorded yet
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3 max-h-[600px] overflow-y-auto">
+        {selectedParticipant.dealHistory.map((deal) => (
+          <div
+            key={deal.dealId}
+            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
+          >
+            <Checkbox
+              checked={selectedDeals.includes(deal.dealId)}
+              onCheckedChange={(checked) => {
+                setSelectedDeals(
+                  checked
+                    ? [...selectedDeals, deal.dealId]
+                    : selectedDeals.filter(id => id !== deal.dealId)
+                );
+              }}
+            />
+            <div className="flex-1">
+              <h4 className="font-medium text-sm">{deal.title}</h4>
+              <div className="flex items-center gap-4 mt-1">
+                <p className="text-sm text-muted-foreground">
+                  ${deal.amount.toLocaleString()}
+                </p>
+                <span className="text-xs text-primary">{deal.type}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                {new Date(deal.date).toLocaleDateString()}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  if (confirm('Are you sure you want to remove this deal?')) {
+                    removeDealMutation.mutate({
+                      participantId: selectedParticipantId,
+                      dealId: deal.dealId
+                    });
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -646,73 +737,7 @@ export function AdminDashboard() {
                     </div>
                   )}
                 </div>
-                {!selectedParticipantId ? (
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    Select a participant to view their deal history
-                  </div>
-                ) : isLoadingParticipant ? (
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    Loading deal history...
-                  </div>
-                ) : !selectedParticipant || !selectedParticipant.dealHistory ? (
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    No deals available
-                  </div>
-                ) : selectedParticipant.dealHistory.length === 0 ? (
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    No deals recorded yet
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                    {selectedParticipant.dealHistory.map((deal) => (
-                      <div
-                        key={deal.dealId}
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
-                      >
-                        <Checkbox
-                          checked={selectedDeals.includes(deal.dealId)}
-                          onCheckedChange={(checked) => {
-                            setSelectedDeals(
-                              checked
-                                ? [...selectedDeals, deal.dealId]
-                                : selectedDeals.filter(id => id !== deal.dealId)
-                            );
-                          }}
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-medium text-sm">{deal.title}</h4>
-                          <div className="flex items-center gap-4 mt-1">
-                            <p className="text-sm text-muted-foreground">
-                              ${deal.amount.toLocaleString()}
-                            </p>
-                            <span className="text-xs text-primary">{deal.type}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(deal.date).toLocaleDateString()}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => {
-                              if (confirm('Are you sure you want to remove this deal?')) {
-                                removeDealMutation.mutate({
-                                  participantId: selectedParticipantId,
-                                  dealId: deal.dealId
-                                });
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {renderDealHistory()}
               </div>
             </div>
           </TabsContent>
