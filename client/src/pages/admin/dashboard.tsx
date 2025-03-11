@@ -124,6 +124,126 @@ export function AdminDashboard() {
     },
   });
 
+  // Add more debugging to the form submission
+  const handleDealSubmit = (data: InsertDeal) => {
+    console.log('[Admin Dashboard] Submitting deal form:', {
+      formData: data,
+      selectedParticipantId
+    });
+
+    if (!selectedParticipantId) {
+      toast({
+        title: "Error",
+        description: "Please select a participant",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addDealMutation.mutate({
+      participantId: selectedParticipantId,
+      deal: data,
+    });
+  };
+
+  // Update the deal history rendering logic with better type safety
+  const renderDealHistory = () => {
+    console.log('[Admin Dashboard] Rendering deal history:', {
+      selectedParticipantId,
+      isLoadingParticipant,
+      selectedParticipant,
+      dealHistory: selectedParticipant?.dealHistory
+    });
+
+    if (!selectedParticipantId) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          Select a participant to view their deal history
+        </div>
+      );
+    }
+
+    if (isLoadingParticipant) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          Loading deal history...
+        </div>
+      );
+    }
+
+    // Initialize deals as an empty array if dealHistory is undefined or null
+    const deals = selectedParticipant?.dealHistory || [];
+    console.log('[Admin Dashboard] Deals to render:', deals);
+
+    if (!Array.isArray(deals)) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          No deals history available
+        </div>
+      );
+    }
+
+    if (deals.length === 0) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          No deals recorded yet
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3 max-h-[600px] overflow-y-auto">
+        {deals.map((deal) => (
+          <div
+            key={deal.dealId}
+            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
+          >
+            <Checkbox
+              checked={selectedDeals.includes(deal.dealId)}
+              onCheckedChange={(checked) => {
+                setSelectedDeals(
+                  checked
+                    ? [...selectedDeals, deal.dealId]
+                    : selectedDeals.filter(id => id !== deal.dealId)
+                );
+              }}
+            />
+            <div className="flex-1">
+              <h4 className="font-medium text-sm">{deal.title}</h4>
+              <div className="flex items-center gap-4 mt-1">
+                <p className="text-sm text-muted-foreground">
+                  ${deal.amount.toLocaleString()}
+                </p>
+                <span className="text-xs text-primary">{deal.type}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                {new Date(deal.date).toLocaleDateString()}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  if (confirm('Are you sure you want to remove this deal?')) {
+                    removeDealMutation.mutate({
+                      participantId: selectedParticipantId,
+                      dealId: deal.dealId
+                    });
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const updateMetricsMutation = useMutation({
     mutationFn: async (data: { 
       id: number; 
@@ -258,124 +378,6 @@ export function AdminDashboard() {
     }
   };
 
-  // Add more debugging to the form submission
-  const handleDealSubmit = (data: InsertDeal) => {
-    console.log('[Admin Dashboard] Submitting deal form:', {
-      formData: data,
-      selectedParticipantId
-    });
-
-    if (!selectedParticipantId) {
-      toast({
-        title: "Error",
-        description: "Please select a participant",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    addDealMutation.mutate({
-      participantId: selectedParticipantId,
-      deal: data,
-    });
-  };
-
-  // Update the deal history rendering logic with better type safety
-  const renderDealHistory = () => {
-    console.log('[Admin Dashboard] Rendering deal history:', {
-      selectedParticipantId,
-      isLoadingParticipant,
-      selectedParticipant,
-      dealHistory: selectedParticipant?.dealHistory
-    });
-
-    if (!selectedParticipantId) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          Select a participant to view their deal history
-        </div>
-      );
-    }
-
-    if (isLoadingParticipant) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          Loading deal history...
-        </div>
-      );
-    }
-
-    if (!selectedParticipant) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          No participant data available
-        </div>
-      );
-    }
-
-    const deals = selectedParticipant.dealHistory || [];
-    console.log('[Admin Dashboard] Deals to render:', deals);
-
-    if (!Array.isArray(deals) || deals.length === 0) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          No deals recorded yet
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-3 max-h-[600px] overflow-y-auto">
-        {deals.map((deal) => (
-          <div
-            key={deal.dealId}
-            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
-          >
-            <Checkbox
-              checked={selectedDeals.includes(deal.dealId)}
-              onCheckedChange={(checked) => {
-                setSelectedDeals(
-                  checked
-                    ? [...selectedDeals, deal.dealId]
-                    : selectedDeals.filter(id => id !== deal.dealId)
-                );
-              }}
-            />
-            <div className="flex-1">
-              <h4 className="font-medium text-sm">{deal.title}</h4>
-              <div className="flex items-center gap-4 mt-1">
-                <p className="text-sm text-muted-foreground">
-                  ${deal.amount.toLocaleString()}
-                </p>
-                <span className="text-xs text-primary">{deal.type}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                {new Date(deal.date).toLocaleDateString()}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                onClick={() => {
-                  if (confirm('Are you sure you want to remove this deal?')) {
-                    removeDealMutation.mutate({
-                      participantId: selectedParticipantId,
-                      dealId: deal.dealId
-                    });
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-white">
