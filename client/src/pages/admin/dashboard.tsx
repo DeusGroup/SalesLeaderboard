@@ -64,11 +64,27 @@ export function AdminDashboard() {
 
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/participants"],
+    onSuccess: (data) => {
+      console.log('[Admin Dashboard] Loaded participants:', data?.length);
+    },
+    onError: (error) => {
+      console.error('[Admin Dashboard] Error loading participants:', error);
+    }
   });
 
   const { data: selectedParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
+    onSuccess: (data) => {
+      console.log('[Admin Dashboard] Loaded selected participant:', {
+        id: data?.id,
+        name: data?.name,
+        dealHistoryCount: data?.dealHistory?.length
+      });
+    },
+    onError: (error) => {
+      console.error('[Admin Dashboard] Error loading selected participant:', error);
+    }
   });
 
   const createParticipantMutation = useMutation({
@@ -96,11 +112,14 @@ export function AdminDashboard() {
 
   const addDealMutation = useMutation({
     mutationFn: async (data: { participantId: string; deal: InsertDeal }) => {
+      console.log('[Admin Dashboard] Adding deal:', data);
       const res = await apiRequest("POST", `/api/participants/${data.participantId}/deals`, data.deal);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[Admin Dashboard] Deal added successfully:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/participants", selectedParticipantId] });
       dealForm.reset();
       toast({
         title: "Success",
@@ -108,6 +127,7 @@ export function AdminDashboard() {
       });
     },
     onError: (error: Error) => {
+      console.error('[Admin Dashboard] Error adding deal:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -522,18 +542,21 @@ export function AdminDashboard() {
               <div className="bg-white rounded-lg border p-6">
                 <h3 className="text-lg font-semibold mb-4">Add New Deal</h3>
                 <form
-                  onSubmit={dealForm.handleSubmit((data) =>
-                    selectedParticipantId
-                      ? addDealMutation.mutate({
-                          participantId: selectedParticipantId,
-                          deal: data,
-                        })
-                      : toast({
-                          title: "Error",
-                          description: "Please select a participant",
-                          variant: "destructive",
-                        })
-                  )}
+                  onSubmit={dealForm.handleSubmit((data) => {
+                    console.log('[Admin Dashboard] Submitting deal form:', data);
+                    if (!selectedParticipantId) {
+                      toast({
+                        title: "Error",
+                        description: "Please select a participant",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    addDealMutation.mutate({
+                      participantId: selectedParticipantId,
+                      deal: data,
+                    });
+                  })}
                   className="space-y-4"
                 >
                   <div className="space-y-2">
@@ -627,7 +650,7 @@ export function AdminDashboard() {
                   <div className="text-sm text-muted-foreground text-center py-4">
                     Select a participant to view their deal history
                   </div>
-                ) : !selectedParticipant?.dealHistory?.length ? (
+                ) : selectedParticipant?.dealHistory?.length === 0 ? (
                   <div className="text-sm text-muted-foreground text-center py-4">
                     No deals recorded yet
                   </div>
