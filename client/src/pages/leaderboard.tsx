@@ -95,64 +95,72 @@ export default function LeaderboardPage() {
                       <div className="grid grid-cols-4 gap-6">
                         {/* Board Revenue */}
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-700 min-w-[110px]">Board Revenue</span>
-                            <span className="font-semibold text-gray-900 ml-auto pr-2">${participant.boardRevenue.toLocaleString()}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-700 text-base">Board Revenue</span>
+                          </div>
+                          <div className="font-semibold text-gray-900 text-lg">
+                            ${participant.boardRevenue.toLocaleString()}
                           </div>
                           <Progress
                             value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
                             className="h-2 bg-gray-100"
                             indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                           />
-                          <div className="text-sm text-gray-600 text-right pr-2">
+                          <div className="text-sm text-gray-600">
                             Goal: ${participant.boardRevenueGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* MSP Revenue */}
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-700 min-w-[100px]">MSP Revenue</span>
-                            <span className="font-semibold text-gray-900 ml-auto pr-2">${participant.mspRevenue.toLocaleString()}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-700 text-base">MSP Revenue</span>
+                          </div>
+                          <div className="font-semibold text-gray-900 text-lg">
+                            ${participant.mspRevenue.toLocaleString()}
                           </div>
                           <Progress
                             value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)}
                             className="h-2 bg-gray-100"
                             indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                           />
-                          <div className="text-sm text-gray-600 text-right pr-2">
+                          <div className="text-sm text-gray-600">
                             Goal: ${participant.mspRevenueGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* Voice Seats */}
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-700 min-w-[90px]">Voice Seats</span>
-                            <span className="font-semibold text-gray-900 ml-auto pr-2">{participant.voiceSeats.toLocaleString()}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-700 text-base">Voice Seats</span>
+                          </div>
+                          <div className="font-semibold text-gray-900 text-lg">
+                            {participant.voiceSeats.toLocaleString()}
                           </div>
                           <Progress
                             value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)}
                             className="h-2 bg-gray-100"
                             indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                           />
-                          <div className="text-sm text-gray-600 text-right pr-2">
+                          <div className="text-sm text-gray-600">
                             Goal: {participant.voiceSeatsGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* Total Deals */}
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-700 min-w-[90px]">Total Deals</span>
-                            <span className="font-semibold text-gray-900 ml-auto pr-2">{participant.totalDeals.toLocaleString()}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-700 text-base">Total Deals</span>
+                          </div>
+                          <div className="font-semibold text-gray-900 text-lg">
+                            {participant.totalDeals.toLocaleString()}
                           </div>
                           <Progress
                             value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)}
                             className="h-2 bg-gray-100"
                             indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
                           />
-                          <div className="text-sm text-gray-600 text-right pr-2">
+                          <div className="text-sm text-gray-600">
                             Goal: {participant.totalDealsGoal.toLocaleString()}
                           </div>
                         </div>
