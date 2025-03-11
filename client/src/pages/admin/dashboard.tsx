@@ -194,53 +194,51 @@ export function AdminDashboard() {
 
               <div className="space-y-4">
                   {/* Header Row */}
-                  <div className="grid grid-cols-4 gap-8 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
+                  <div className="grid grid-cols-[200px,1fr,1fr,1fr,1fr] gap-8 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
                     <div>Name</div>
                     <div>Board Revenue</div>
                     <div>MSP Revenue</div>
                     <div>Voice Seats</div>
+                    <div>Total Deals</div>
                   </div>
 
                   {participants?.map((participant) => (
                     <div key={participant.id} className="space-y-6 p-4 rounded-lg border bg-white">
-                      <div className="flex items-center justify-between">
-                        <Link href={`/admin/profile/${participant.id}`}>
-                          <a className="flex items-center gap-2 hover:text-primary">
-                            {participant.avatarUrl ? (
-                              <img
-                                src={participant.avatarUrl}
-                                alt={participant.name}
-                                className="w-8 h-8 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
-                                {participant.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <span className="font-medium">{participant.name}</span>
-                          </a>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => {
-                            if (confirm(`Are you sure you want to delete ${participant.name}?`)) {
-                              deleteParticipantMutation.mutate(participant.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <div className="grid grid-cols-[200px,1fr,1fr,1fr,1fr] gap-8 items-start">
+                        {/* User Info */}
+                        <div className="flex items-center gap-2">
+                          {participant.avatarUrl ? (
+                            <img
+                              src={participant.avatarUrl}
+                              alt={participant.name}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
+                              {participant.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <span className="font-medium">{participant.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50 ml-auto"
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete ${participant.name}?`)) {
+                                deleteParticipantMutation.mutate(participant.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
 
-                      <div className="grid grid-cols-4 gap-8">
                         {/* Board Revenue */}
                         <div className="space-y-4">
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
-                              className="w-[150px]"
+                              className="w-[120px]"
                               placeholder="Current Revenue"
                               defaultValue={participant.boardRevenue}
                               onChange={(e) => {
@@ -256,7 +254,7 @@ export function AdminDashboard() {
                             <Target className="h-4 w-4 text-gray-400" />
                             <Input
                               type="number"
-                              className="w-[150px]"
+                              className="w-[120px]"
                               placeholder="Goal"
                               defaultValue={participant.boardRevenueGoal}
                               onChange={(e) => {
@@ -278,7 +276,7 @@ export function AdminDashboard() {
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
-                              className="w-[150px]"
+                              className="w-[120px]"
                               placeholder="Current MSP"
                               defaultValue={participant.mspRevenue}
                               onChange={(e) => {
@@ -294,7 +292,7 @@ export function AdminDashboard() {
                             <Target className="h-4 w-4 text-gray-400" />
                             <Input
                               type="number"
-                              className="w-[150px]"
+                              className="w-[120px]"
                               placeholder="Goal"
                               defaultValue={participant.mspRevenueGoal}
                               onChange={(e) => {
@@ -316,7 +314,7 @@ export function AdminDashboard() {
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
-                              className="w-[150px]"
+                              className="w-[120px]"
                               placeholder="Current Seats"
                               defaultValue={participant.voiceSeats}
                               onChange={(e) => {
@@ -332,7 +330,7 @@ export function AdminDashboard() {
                             <Target className="h-4 w-4 text-gray-400" />
                             <Input
                               type="number"
-                              className="w-[150px]"
+                              className="w-[120px]"
                               placeholder="Goal"
                               defaultValue={participant.voiceSeatsGoal}
                               onChange={(e) => {
@@ -354,7 +352,7 @@ export function AdminDashboard() {
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
-                              className="w-[150px]"
+                              className="w-[120px]"
                               placeholder="Current Deals"
                               defaultValue={participant.totalDeals}
                               onChange={(e) => {
@@ -370,7 +368,7 @@ export function AdminDashboard() {
                             <Target className="h-4 w-4 text-gray-400" />
                             <Input
                               type="number"
-                              className="w-[150px]"
+                              className="w-[120px]"
                               placeholder="Goal"
                               defaultValue={participant.totalDealsGoal}
                               onChange={(e) => {
