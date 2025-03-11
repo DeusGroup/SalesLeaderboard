@@ -2,17 +2,18 @@ import { pgTable, text, serial, integer, timestamp, json } from "drizzle-orm/pg-
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Deal type definition
+// Deal type definition with strict validation
 export const dealSchema = z.object({
   dealId: z.string(),
-  title: z.string(),
-  amount: z.number(),
+  title: z.string().min(1, "Title is required"),
+  amount: z.number().min(0, "Amount must be non-negative"),
   date: z.string(),
   type: z.enum(['BOARD', 'MSP', 'VOICE']),
 });
 
 export type Deal = z.infer<typeof dealSchema>;
 
+// Participant table definition
 export const participants = pgTable("participants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -37,6 +38,7 @@ export const participants = pgTable("participants", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Schema for admin table
 export const admin = pgTable("admin", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -59,8 +61,10 @@ export const insertParticipantSchema = createInsertSchema(participants).pick({
   department: true,
 });
 
-// Schema for deal creation
-export const insertDealSchema = dealSchema.omit({ dealId: true, date: true });
+// Schema for deal creation with strict validation
+export const insertDealSchema = dealSchema
+  .omit({ dealId: true, date: true })
+  .strict();
 
 // Schema for admin login
 export const adminLoginSchema = createInsertSchema(admin).pick({

@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertParticipantSchema, insertDealSchema } from "@shared/schema";
-import type { Participant, InsertDeal } from "@shared/schema";
+import type { Participant, InsertDeal, Deal } from "@shared/schema"; // Added Deal type import
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Trophy, Plus, Trash2, Target, Calendar } from "lucide-react";
@@ -61,45 +61,40 @@ export function AdminDashboard() {
     },
   });
 
-  // Fix participant queries with proper typing and caching strategy
+  // Fix participant queries with proper typing
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/participants"],
     retry: 1,
     refetchOnMount: true,
-    onSuccess: (data) => {
-      console.log('[Admin Dashboard] Participants loaded:', data);
-    }
+    refetchOnWindowFocus: true
   });
 
-  // Fix selected participant query with proper data handling
+  // Fix selected participant query type and add debug logging
   const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
     retry: 1,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    onSuccess: (data) => {
-      console.log('[Admin Dashboard] Selected participant data:', {
-        id: data?.id,
-        dealHistory: data?.dealHistory
-      });
+    select: (data) => {
+      console.log('[Admin Dashboard] Selected participant raw data:', data);
+      return data;
     }
   });
 
-  // Add debug logging for deal submission
   const addDealMutation = useMutation({
     mutationFn: async (data: { participantId: string; deal: InsertDeal }) => {
+      console.log('[Admin Dashboard] Adding deal:', data);
       const res = await apiRequest("POST", `/api/participants/${data.participantId}/deals`, data.deal);
       return res.json();
     },
     onSuccess: (data) => {
-      console.log('[Admin Dashboard] Deal added:', data);
-      // Force refetch with exact matches
-      queryClient.invalidateQueries({ 
+      console.log('[Admin Dashboard] Deal added successfully:', data);
+      queryClient.invalidateQueries({
         queryKey: ["/api/participants"],
         exact: true
       });
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: ["/api/participants", selectedParticipantId],
         exact: true
       });
@@ -111,9 +106,113 @@ export function AdminDashboard() {
     }
   });
 
+  const renderDealHistory = () => {
+    console.log('[Admin Dashboard] Rendering deal history:', {
+      selectedParticipantId,
+      participant: selectedParticipant,
+      dealHistory: selectedParticipant?.dealHistory,
+      dealCount: selectedParticipant?.dealHistory?.length || 0
+    });
+
+    if (!selectedParticipantId) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          Select a participant to view their deal history
+        </div>
+      );
+    }
+
+    if (isLoadingParticipant) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          Loading deal history...
+        </div>
+      );
+    }
+
+    if (!selectedParticipant) {
+      return (
+        <div className="text-sm text-muted-foreground text-center py-4">
+          No participant data available
+        </div>
+      );
+    }
+
+    let deals: Deal[] = [];
+    try {
+      deals = Array.isArray(selectedParticipant.dealHistory)
+        ? selectedParticipant.dealHistory
+        : typeof selectedParticipant.dealHistory === 'string'
+          ? JSON.parse(selectedParticipant.dealHistory)
+          : [];
+
+      console.log('[Admin Dashboard] Processed deals:', deals);
+    } catch (e) {
+      console.error('[Admin Dashboard] Error processing deals:', e);
+    }
+
+    return (
+      <div className="space-y-3 max-h-[600px] overflow-y-auto">
+        {deals.length > 0 ? (
+          deals.map((deal) => (
+            <div
+              key={deal.dealId}
+              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
+            >
+              <Checkbox
+                checked={selectedDeals.includes(deal.dealId)}
+                onCheckedChange={(checked) => {
+                  setSelectedDeals(
+                    checked
+                      ? [...selectedDeals, deal.dealId]
+                      : selectedDeals.filter(id => id !== deal.dealId)
+                  );
+                }}
+              />
+              <div className="flex-1">
+                <h4 className="font-medium text-sm">{deal.title}</h4>
+                <div className="flex items-center gap-4 mt-1">
+                  <p className="text-sm text-muted-foreground">
+                    ${deal.amount.toLocaleString()}
+                  </p>
+                  <span className="text-xs text-primary">{deal.type}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  {new Date(deal.date).toLocaleDateString()}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to remove this deal?')) {
+                      removeDealMutation.mutate({
+                        participantId: selectedParticipantId,
+                        dealId: deal.dealId
+                      });
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-sm text-muted-foreground text-center py-4">
+            No deals recorded yet
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const updateMetricsMutation = useMutation({
-    mutationFn: async (data: { 
-      id: number; 
+    mutationFn: async (data: {
+      id: number;
       boardRevenue?: number;
       mspRevenue?: number;
       voiceSeats?: number;
@@ -184,11 +283,11 @@ export function AdminDashboard() {
   });
 
   const bulkDealMutation = useMutation({
-    mutationFn: async ({ participantId, dealIds, action, data }: { 
-      participantId: string; 
-      dealIds: string[]; 
+    mutationFn: async ({ participantId, dealIds, action, data }: {
+      participantId: string;
+      dealIds: string[];
       action: 'delete' | 'update';
-      data?: { title?: string } 
+      data?: { title?: string }
     }) => {
       const res = await apiRequest(
         action === 'delete' ? "DELETE" : "PATCH",
@@ -266,99 +365,6 @@ export function AdminDashboard() {
     });
   };
 
-  // Fix deal history rendering logic
-  const renderDealHistory = () => {
-    console.log('[Admin Dashboard] Rendering deal history:', {
-      selectedParticipantId,
-      participant: selectedParticipant,
-      dealHistory: selectedParticipant?.dealHistory
-    });
-
-    if (!selectedParticipantId) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          Select a participant to view their deal history
-        </div>
-      );
-    }
-
-    if (isLoadingParticipant) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          Loading deal history...
-        </div>
-      );
-    }
-
-    if (!selectedParticipant) {
-      return (
-        <div className="text-sm text-muted-foreground text-center py-4">
-          No participant data available
-        </div>
-      );
-    }
-
-    const deals = selectedParticipant.dealHistory || [];
-    console.log('[Admin Dashboard] Deals to render:', deals);
-
-    return (
-      <div className="space-y-3 max-h-[600px] overflow-y-auto">
-        {deals.length === 0 ? (
-          <div className="text-sm text-muted-foreground text-center py-4">
-            No deals recorded yet
-          </div>
-        ) : (
-          deals.map((deal) => (
-            <div
-              key={deal.dealId}
-              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
-            >
-              <Checkbox
-                checked={selectedDeals.includes(deal.dealId)}
-                onCheckedChange={(checked) => {
-                  setSelectedDeals(
-                    checked
-                      ? [...selectedDeals, deal.dealId]
-                      : selectedDeals.filter(id => id !== deal.dealId)
-                  );
-                }}
-              />
-              <div className="flex-1">
-                <h4 className="font-medium text-sm">{deal.title}</h4>
-                <div className="flex items-center gap-4 mt-1">
-                  <p className="text-sm text-muted-foreground">
-                    ${deal.amount.toLocaleString()}
-                  </p>
-                  <span className="text-xs text-primary">{deal.type}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  {new Date(deal.date).toLocaleDateString()}
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  onClick={() => {
-                    if (confirm('Are you sure you want to remove this deal?')) {
-                      removeDealMutation.mutate({
-                        participantId: selectedParticipantId,
-                        dealId: deal.dealId
-                      });
-                    }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -707,14 +713,14 @@ export function AdminDashboard() {
                   <h3 className="text-lg font-semibold">Deal History</h3>
                   {selectedDeals.length > 0 && (
                     <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => handleBulkAction('update')}
                       >
                         Edit Selected
                       </Button>
-                      <Button 
-                        variant="destructive" 
+                      <Button
+                        variant="destructive"
                         onClick={() => handleBulkAction('delete')}
                       >
                         Delete Selected ({selectedDeals.length})

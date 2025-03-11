@@ -45,11 +45,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   private ensureValidDealHistory(dealHistory: any): Deal[] {
-    if (!Array.isArray(dealHistory)) {
-      console.log('[Storage] Invalid deal history, initializing empty array');
+    // If dealHistory is null or undefined, return empty array
+    if (!dealHistory) {
+      console.log('[Storage] Deal history is null/undefined, initializing empty array');
       return [];
     }
-    return dealHistory;
+
+    // If dealHistory is a string, try to parse it
+    if (typeof dealHistory === 'string') {
+      try {
+        const parsed = JSON.parse(dealHistory);
+        if (Array.isArray(parsed)) {
+          console.log('[Storage] Successfully parsed deal history string:', parsed.length);
+          return parsed;
+        }
+      } catch (e) {
+        console.error('[Storage] Failed to parse deal history string:', e);
+      }
+      return [];
+    }
+
+    // If dealHistory is already an array, return it
+    if (Array.isArray(dealHistory)) {
+      console.log('[Storage] Deal history is already an array:', dealHistory.length);
+      return dealHistory;
+    }
+
+    console.log('[Storage] Unknown deal history format, returning empty array');
+    return [];
   }
 
   async getParticipant(id: number): Promise<Participant | undefined> {
@@ -65,13 +88,13 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
 
-    // Ensure dealHistory is properly handled
+    // Process dealHistory
     participant.dealHistory = this.ensureValidDealHistory(participant.dealHistory);
 
     console.log('[Storage] Participant found:', {
       id: participant.id,
       dealHistoryLength: participant.dealHistory.length,
-      dealHistory: participant.dealHistory
+      deals: participant.dealHistory
     });
 
     return participant;
@@ -93,7 +116,8 @@ export class DatabaseStorage implements IStorage {
 
     console.log('[Storage] Found participants:', {
       count: processedParticipants.length,
-      participantsWithDeals: processedParticipants.filter(p => p.dealHistory.length > 0).length
+      participantsWithDeals: processedParticipants.filter(p => p.dealHistory.length > 0).length,
+      firstParticipantDeals: processedParticipants[0]?.dealHistory?.length
     });
 
     return processedParticipants;
@@ -138,33 +162,18 @@ export class DatabaseStorage implements IStorage {
       totalDealsGoal: metrics.totalDealsGoal ?? participant.totalDealsGoal,
     };
 
-    // Updated score calculation to use 2x multiplier for MSP Revenue
+    // Score calculation with 2x multiplier for MSP Revenue
     const score =
       Number(updatedMetrics.boardRevenue) +
       (Number(updatedMetrics.mspRevenue) * 2) +
       (Number(updatedMetrics.voiceSeats) * 10) +
       (Number(updatedMetrics.totalDeals) * 50);
 
-    const performanceHistory = [
-      ...(participant.performanceHistory || []),
-      {
-        timestamp: new Date().toISOString(),
-        score,
-        description: `Points Update:
-          Board Revenue: $${updatedMetrics.boardRevenue} (+${updatedMetrics.boardRevenue}),
-          MSP Revenue: $${updatedMetrics.mspRevenue} (+${updatedMetrics.mspRevenue * 2}),
-          Voice Seats: ${updatedMetrics.voiceSeats} (+${updatedMetrics.voiceSeats * 10}),
-          Total Deals: ${updatedMetrics.totalDeals} (+${updatedMetrics.totalDeals * 50})
-        `.replace(/\s+/g, ' ').trim(),
-      },
-    ];
-
     await db
       .update(participants)
       .set({
         ...updatedMetrics,
         score,
-        performanceHistory,
       })
       .where(eq(participants.id, id));
   }
@@ -213,7 +222,8 @@ export class DatabaseStorage implements IStorage {
     console.log('[Storage] Updating participant:', {
       id,
       metrics,
-      dealHistoryLength: updatedDealHistory.length
+      dealHistoryLength: updatedDealHistory.length,
+      dealHistory: updatedDealHistory
     });
 
     // Update participant with new deal and metrics
@@ -259,7 +269,7 @@ export class DatabaseStorage implements IStorage {
         break;
     }
 
-    // Update participant by removing deal and updating metrics
+    // Update participant
     await db
       .update(participants)
       .set({
@@ -302,7 +312,7 @@ export class DatabaseStorage implements IStorage {
       voiceSeats: 0
     });
 
-    // Update participant metrics and remove deals
+    // Update participant
     await db
       .update(participants)
       .set({
