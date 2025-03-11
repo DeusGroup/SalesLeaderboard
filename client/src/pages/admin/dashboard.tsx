@@ -72,7 +72,7 @@ export function AdminDashboard() {
     }
   });
 
-  const { data: selectedParticipant } = useQuery<Participant>({
+  const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
     onSuccess: (data) => {
@@ -650,7 +650,15 @@ export function AdminDashboard() {
                   <div className="text-sm text-muted-foreground text-center py-4">
                     Select a participant to view their deal history
                   </div>
-                ) : selectedParticipant?.dealHistory?.length === 0 ? (
+                ) : isLoadingParticipant ? (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    Loading deal history...
+                  </div>
+                ) : !selectedParticipant || !selectedParticipant.dealHistory ? (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    No deals available
+                  </div>
+                ) : selectedParticipant.dealHistory.length === 0 ? (
                   <div className="text-sm text-muted-foreground text-center py-4">
                     No deals recorded yet
                   </div>
