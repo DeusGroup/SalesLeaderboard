@@ -73,29 +73,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/participants/:id", requireAuth, async (req, res) => {
     try {
-      console.log('[Admin] Fetching participant:', req.params.id);
       const { id } = req.params;
-      const participant = await storage.getParticipant(parseInt(id));
+      console.log('[Routes] Fetching participant:', id);
 
+      const participant = await storage.getParticipant(parseInt(id));
       if (!participant) {
-        console.log('[Admin] Participant not found:', id);
+        console.log('[Routes] Participant not found:', id);
         return res.status(404).json({ error: "Participant not found" });
       }
 
-      // Ensure dealHistory is properly initialized
-      participant.dealHistory = participant.dealHistory || [];
-
-      console.log('[Admin] Found participant:', {
+      console.log('[Routes] Participant found:', {
         id: participant.id,
         name: participant.name,
-        dealHistory: participant.dealHistory,
-        dealHistoryLength: participant.dealHistory?.length
+        dealHistoryLength: participant.dealHistory.length,
+        dealHistory: participant.dealHistory
       });
 
       res.json(participant);
     } catch (error) {
-      console.error('[Admin] Error fetching participant:', error);
-      console.error('[Admin] Stack trace:', error instanceof Error ? error.stack : '');
+      console.error('[Routes] Error fetching participant:', error);
       res.status(500).json({ error: 'Failed to fetch participant' });
     }
   });
@@ -119,40 +115,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Deal management endpoints
   app.post("/api/participants/:id/deals", requireAuth, async (req, res) => {
     try {
-      console.log('[Admin] Adding deal - Request:', {
-        participantId: req.params.id,
+      const { id } = req.params;
+      console.log('[Routes] Adding deal - Request:', {
+        participantId: id,
         body: req.body
       });
 
-      const { id } = req.params;
       const dealData = insertDealSchema.parse(req.body);
-      console.log('[Admin] Validated deal data:', dealData);
 
-      // Generate a unique deal ID
+      // Generate a unique deal ID and add date
       const deal = {
         ...dealData,
         dealId: `${Date.now()}-${randomBytes(4).toString('hex')}`,
         date: new Date().toISOString()
       };
-      console.log('[Admin] Prepared deal object:', deal);
+
+      console.log('[Routes] Parsed deal data:', deal);
 
       const participant = await storage.addDeal(parseInt(id), deal);
-      console.log('[Admin] Updated participant:', {
-        id: participant?.id,
-        name: participant?.name,
-        dealHistory: participant?.dealHistory,
-        dealHistoryLength: participant?.dealHistory?.length
+
+      console.log('[Routes] Deal added successfully:', {
+        participantId: id,
+        dealId: deal.dealId,
+        updatedDealHistoryLength: participant.dealHistory.length
       });
 
-      // Return the complete participant data along with the added deal
       res.json({
         success: true,
         participant,
         addedDeal: deal
       });
     } catch (error) {
-      console.error('[Admin] Error adding deal:', error);
-      console.error('[Admin] Stack trace:', error instanceof Error ? error.stack : '');
+      console.error('[Routes] Error adding deal:', error);
       res.status(400).json({
         error: "Failed to add deal",
         details: error instanceof Error ? error.message : undefined

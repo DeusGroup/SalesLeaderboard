@@ -44,31 +44,59 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  private ensureValidDealHistory(dealHistory: any): Deal[] {
+    if (!Array.isArray(dealHistory)) {
+      console.log('[Storage] Invalid deal history, initializing empty array');
+      return [];
+    }
+    return dealHistory;
+  }
+
   async getParticipant(id: number): Promise<Participant | undefined> {
+    console.log('[Storage] Fetching participant:', id);
+
     const [participant] = await db
       .select()
       .from(participants)
       .where(eq(participants.id, id));
 
-    // Ensure dealHistory is properly initialized as an array
-    if (participant) {
-      participant.dealHistory = participant.dealHistory || [];
+    if (!participant) {
+      console.log('[Storage] Participant not found:', id);
+      return undefined;
     }
+
+    // Ensure dealHistory is properly handled
+    participant.dealHistory = this.ensureValidDealHistory(participant.dealHistory);
+
+    console.log('[Storage] Participant found:', {
+      id: participant.id,
+      dealHistoryLength: participant.dealHistory.length,
+      dealHistory: participant.dealHistory
+    });
 
     return participant;
   }
 
   async getParticipantsByScore(): Promise<Participant[]> {
+    console.log('[Storage] Fetching all participants');
+
     const allParticipants = await db
       .select()
       .from(participants)
       .orderBy(desc(participants.score));
 
-    // Ensure dealHistory is properly initialized for all participants
-    return allParticipants.map(participant => ({
+    // Ensure dealHistory is properly handled for all participants
+    const processedParticipants = allParticipants.map(participant => ({
       ...participant,
-      dealHistory: participant.dealHistory || []
+      dealHistory: this.ensureValidDealHistory(participant.dealHistory)
     }));
+
+    console.log('[Storage] Found participants:', {
+      count: processedParticipants.length,
+      participantsWithDeals: processedParticipants.filter(p => p.dealHistory.length > 0).length
+    });
+
+    return processedParticipants;
   }
 
   async createParticipant(participant: InsertParticipant): Promise<Participant> {
@@ -154,15 +182,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addDeal(id: number, deal: Deal): Promise<Participant> {
-    console.log('[Storage] Adding deal - Input:', { participantId: id, deal });
+    console.log('[Storage] Adding deal:', { participantId: id, deal });
 
     const participant = await this.getParticipant(id);
     if (!participant) throw new Error("Participant not found");
 
-    console.log('[Storage] Found participant:', {
-      id: participant.id,
-      currentDealHistory: participant.dealHistory
-    });
+    // Get current deal history and ensure it's an array
+    const currentDealHistory = this.ensureValidDealHistory(participant.dealHistory);
+
+    // Add new deal
+    const updatedDealHistory = [...currentDealHistory, deal];
 
     // Update metrics based on deal type
     const metrics: any = {
@@ -181,13 +210,10 @@ export class DatabaseStorage implements IStorage {
         break;
     }
 
-    // Ensure dealHistory is an array and add the new deal
-    const dealHistory = Array.isArray(participant.dealHistory) ? [...participant.dealHistory, deal] : [deal];
-
-    console.log('[Storage] Updating participant with:', {
+    console.log('[Storage] Updating participant:', {
+      id,
       metrics,
-      dealHistoryLength: dealHistory.length,
-      latestDeal: deal
+      dealHistoryLength: updatedDealHistory.length
     });
 
     // Update participant with new deal and metrics
@@ -195,7 +221,7 @@ export class DatabaseStorage implements IStorage {
       .update(participants)
       .set({
         ...metrics,
-        dealHistory
+        dealHistory: updatedDealHistory
       })
       .where(eq(participants.id, id));
 
@@ -205,12 +231,6 @@ export class DatabaseStorage implements IStorage {
     // Fetch and return updated participant
     const updatedParticipant = await this.getParticipant(id);
     if (!updatedParticipant) throw new Error("Failed to fetch updated participant");
-
-    console.log('[Storage] Updated participant result:', {
-      id: updatedParticipant.id,
-      dealHistoryLength: updatedParticipant.dealHistory.length,
-      deals: updatedParticipant.dealHistory
-    });
 
     return updatedParticipant;
   }
