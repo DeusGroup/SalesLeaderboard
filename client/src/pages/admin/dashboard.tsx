@@ -72,11 +72,12 @@ export function AdminDashboard() {
     }
   });
 
+  // Improve debuggability of participant selection
   const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
     onSuccess: (data) => {
-      console.log('[Admin Dashboard] Loaded selected participant:', {
+      console.log('[Admin Dashboard] Selected participant loaded:', {
         id: data?.id,
         name: data?.name,
         dealHistory: data?.dealHistory,
@@ -88,29 +89,7 @@ export function AdminDashboard() {
     }
   });
 
-  const createParticipantMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/participants", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
-      participantForm.reset();
-      setIsAddUserDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Participant added successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
+  // Improve debuggability of deal management
   const addDealMutation = useMutation({
     mutationFn: async (data: { participantId: string; deal: InsertDeal }) => {
       console.log('[Admin Dashboard] Adding deal:', data);
@@ -121,7 +100,6 @@ export function AdminDashboard() {
     },
     onSuccess: (data) => {
       console.log('[Admin Dashboard] Deal added successfully:', data);
-      // Force refetch both queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
       if (selectedParticipantId) {
         queryClient.invalidateQueries({ 
@@ -279,6 +257,29 @@ export function AdminDashboard() {
     }
   };
 
+  // Add more debugging to the form submission
+  const handleDealSubmit = (data: InsertDeal) => {
+    console.log('[Admin Dashboard] Submitting deal form:', {
+      formData: data,
+      selectedParticipantId
+    });
+
+    if (!selectedParticipantId) {
+      toast({
+        title: "Error",
+        description: "Please select a participant",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addDealMutation.mutate({
+      participantId: selectedParticipantId,
+      deal: data,
+    });
+  };
+
+  // Improve deal history rendering with better debugging
   const renderDealHistory = () => {
     console.log('[Admin Dashboard] Rendering deal history:', {
       selectedParticipantId,
@@ -312,6 +313,7 @@ export function AdminDashboard() {
     }
 
     const deals = selectedParticipant.dealHistory;
+    console.log('[Admin Dashboard] Deals to render:', deals);
 
     if (deals.length === 0) {
       return (
@@ -645,22 +647,9 @@ export function AdminDashboard() {
             <div className="grid gap-8 lg:grid-cols-2">
               <div className="bg-white rounded-lg border p-6">
                 <h3 className="text-lg font-semibold mb-4">Add New Deal</h3>
+                {/* Update form to use the new submit handler */}
                 <form
-                  onSubmit={dealForm.handleSubmit((data) => {
-                    console.log('[Admin Dashboard] Submitting deal form:', data);
-                    if (!selectedParticipantId) {
-                      toast({
-                        title: "Error",
-                        description: "Please select a participant",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    addDealMutation.mutate({
-                      participantId: selectedParticipantId,
-                      deal: data,
-                    });
-                  })}
+                  onSubmit={dealForm.handleSubmit(handleDealSubmit)}
                   className="space-y-4"
                 >
                   <div className="space-y-2">

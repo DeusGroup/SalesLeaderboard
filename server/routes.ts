@@ -85,7 +85,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[Admin] Found participant:', {
         id: participant.id,
         name: participant.name,
-        dealHistoryCount: participant.dealHistory?.length
+        dealHistory: participant.dealHistory,
+        dealHistoryLength: participant.dealHistory?.length
       });
 
       res.json(participant);
@@ -115,8 +116,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Deal management endpoints
   app.post("/api/participants/:id/deals", requireAuth, async (req, res) => {
     try {
-      console.log('[Admin] Adding deal - Request body:', req.body);
-      console.log('[Admin] Participant ID:', req.params.id);
+      console.log('[Admin] Adding deal - Request:', {
+        participantId: req.params.id,
+        body: req.body
+      });
 
       const { id } = req.params;
       const dealData = insertDealSchema.parse(req.body);
@@ -128,17 +131,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dealId: `${Date.now()}-${randomBytes(4).toString('hex')}`,
         date: new Date().toISOString()
       };
-      console.log('[Admin] Final deal object:', deal);
+      console.log('[Admin] Prepared deal object:', deal);
 
       const participant = await storage.addDeal(parseInt(id), deal);
-      console.log('[Admin] Updated participant after deal addition:', {
+      console.log('[Admin] Updated participant:', {
         id: participant?.id,
         name: participant?.name,
         dealHistory: participant?.dealHistory,
         dealHistoryLength: participant?.dealHistory?.length
       });
 
-      // Return the complete participant data
+      // Return the complete participant data along with the added deal
       res.json({
         success: true,
         participant,
