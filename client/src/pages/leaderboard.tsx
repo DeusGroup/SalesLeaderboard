@@ -39,7 +39,7 @@ export default function LeaderboardPage() {
       </header>
 
       <main className="container mx-auto py-4 px-6">
-        <div className="grid gap-6 lg:grid-cols-[1fr,300px]">
+        <div className="grid gap-6 lg:grid-cols-[1fr,280px]">
           <div className="space-y-3 overflow-x-auto pb-2">
             {isLoading ? (
               <div className="text-center py-4 text-gray-600 text-lg">Loading...</div>
@@ -48,11 +48,11 @@ export default function LeaderboardPage() {
                 No participants yet
               </div>
             ) : (
-              <div className="space-y-3 min-w-[900px] lg:min-w-0">
+              <div className="space-y-3 min-w-[1000px] lg:min-w-0">
                 {/* Table Header */}
-                <div className="grid grid-cols-5 gap-4 py-2.5 px-4 bg-gray-50 rounded-lg font-medium text-base">
+                <div className="grid grid-cols-[250px,1fr,180px] gap-4 py-2.5 px-4 bg-gray-50 rounded-lg font-medium text-base">
                   <div>Name</div>
-                  <div className="text-center col-span-3">Performance Metrics</div>
+                  <div className="text-center">Performance Metrics</div>
                   <div className="text-center flex items-center justify-center gap-1">
                     <Trophy className="h-5 w-5 text-[#00B140]" />
                     <span>Total Score</span>
@@ -69,100 +69,102 @@ export default function LeaderboardPage() {
                           index === 2 ? 'border-[#CD7F32] bg-[#CD7F32]/5' : 'border-gray-100'
                     }`}
                   >
-                    {/* User Info */}
-                    <div className="flex items-center gap-3 mb-3">
-                      {participant.avatarUrl ? (
-                        <img
-                          src={participant.avatarUrl}
-                          alt={participant.name}
-                          className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100"
-                        />
-                      ) : (
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ${
-                          index === 0 ? 'bg-[#FFD700]/20 text-[#FFD700]' :
-                            index === 1 ? 'bg-[#C0C0C0]/20 text-[#C0C0C0]' :
-                              index === 2 ? 'bg-[#CD7F32]/20 text-[#CD7F32]' :
-                                'bg-gray-100 text-gray-600'
-                        }`}>
-                          {participant.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <span className="font-semibold text-lg text-gray-900">{participant.name}</span>
-                    </div>
+                    <div className="grid grid-cols-[250px,1fr,180px] gap-4 items-center">
+                      {/* User Info */}
+                      <div className="flex items-center gap-3">
+                        {participant.avatarUrl ? (
+                          <img
+                            src={participant.avatarUrl}
+                            alt={participant.name}
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
+                          />
+                        ) : (
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                            index === 0 ? 'bg-[#FFD700]/20 text-[#FFD700]' :
+                              index === 1 ? 'bg-[#C0C0C0]/20 text-[#C0C0C0]' :
+                                index === 2 ? 'bg-[#CD7F32]/20 text-[#CD7F32]' :
+                                  'bg-gray-100 text-gray-600'
+                          }`}>
+                            {participant.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span className="font-semibold text-xl text-gray-900">{participant.name}</span>
+                      </div>
 
-                    {/* Metrics Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                      {/* Board Revenue */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-gray-700">Board Revenue</span>
-                          <span className="font-semibold text-gray-900">${participant.boardRevenue.toLocaleString()}</span>
+                      {/* Metrics Grid */}
+                      <div className="grid grid-cols-4 gap-4">
+                        {/* Board Revenue */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-base">
+                            <span className="font-medium text-gray-700">Board Revenue</span>
+                            <span className="font-semibold text-gray-900">${participant.boardRevenue.toLocaleString()}</span>
+                          </div>
+                          <Progress
+                            value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
+                            className="h-2 bg-gray-100"
+                            indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
+                          />
+                          <div className="text-sm text-gray-600 text-right">
+                            Goal: ${participant.boardRevenueGoal.toLocaleString()}
+                          </div>
                         </div>
-                        <Progress
-                          value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
-                          className="h-2 bg-gray-100"
-                          indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
-                        />
-                        <div className="text-sm text-gray-600 text-right">
-                          Goal: ${participant.boardRevenueGoal.toLocaleString()}
+
+                        {/* MSP Revenue */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-base">
+                            <span className="font-medium text-gray-700">MSP Revenue</span>
+                            <span className="font-semibold text-gray-900">${participant.mspRevenue.toLocaleString()}</span>
+                          </div>
+                          <Progress
+                            value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)}
+                            className="h-2 bg-gray-100"
+                            indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
+                          />
+                          <div className="text-sm text-gray-600 text-right">
+                            Goal: ${participant.mspRevenueGoal.toLocaleString()}
+                          </div>
+                        </div>
+
+                        {/* Voice Seats */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-base">
+                            <span className="font-medium text-gray-700">Voice Seats</span>
+                            <span className="font-semibold text-gray-900">{participant.voiceSeats.toLocaleString()}</span>
+                          </div>
+                          <Progress
+                            value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)}
+                            className="h-2 bg-gray-100"
+                            indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
+                          />
+                          <div className="text-sm text-gray-600 text-right">
+                            Goal: {participant.voiceSeatsGoal.toLocaleString()}
+                          </div>
+                        </div>
+
+                        {/* Total Deals */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-base">
+                            <span className="font-medium text-gray-700">Total Deals</span>
+                            <span className="font-semibold text-gray-900">{participant.totalDeals.toLocaleString()}</span>
+                          </div>
+                          <Progress
+                            value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)}
+                            className="h-2 bg-gray-100"
+                            indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
+                          />
+                          <div className="text-sm text-gray-600 text-right">
+                            Goal: {participant.totalDealsGoal.toLocaleString()}
+                          </div>
                         </div>
                       </div>
 
-                      {/* MSP Revenue */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-gray-700">MSP Revenue</span>
-                          <span className="font-semibold text-gray-900">${participant.mspRevenue.toLocaleString()}</span>
+                      {/* Score */}
+                      <div className="flex justify-end">
+                        <div className="bg-gradient-to-r from-[#00B140] to-[#00D150] rounded-full px-5 py-2 shadow-md">
+                          <span className="text-xl font-bold text-white">
+                            {participant.score.toLocaleString()} points
+                          </span>
                         </div>
-                        <Progress
-                          value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)}
-                          className="h-2 bg-gray-100"
-                          indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
-                        />
-                        <div className="text-sm text-gray-600 text-right">
-                          Goal: ${participant.mspRevenueGoal.toLocaleString()}
-                        </div>
-                      </div>
-
-                      {/* Voice Seats */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-gray-700">Voice Seats</span>
-                          <span className="font-semibold text-gray-900">{participant.voiceSeats.toLocaleString()}</span>
-                        </div>
-                        <Progress
-                          value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)}
-                          className="h-2 bg-gray-100"
-                          indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
-                        />
-                        <div className="text-sm text-gray-600 text-right">
-                          Goal: {participant.voiceSeatsGoal.toLocaleString()}
-                        </div>
-                      </div>
-
-                      {/* Total Deals */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-gray-700">Total Deals</span>
-                          <span className="font-semibold text-gray-900">{participant.totalDeals.toLocaleString()}</span>
-                        </div>
-                        <Progress
-                          value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)}
-                          className="h-2 bg-gray-100"
-                          indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
-                        />
-                        <div className="text-sm text-gray-600 text-right">
-                          Goal: {participant.totalDealsGoal.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Score */}
-                    <div className="flex justify-end">
-                      <div className="bg-gradient-to-r from-[#00B140] to-[#00D150] rounded-full px-4 py-1.5 shadow-md">
-                        <span className="text-lg font-bold text-white">
-                          {participant.score.toLocaleString()} points
-                        </span>
                       </div>
                     </div>
                   </div>
