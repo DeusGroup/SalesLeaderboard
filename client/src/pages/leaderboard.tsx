@@ -94,9 +94,9 @@ export default function LeaderboardPage() {
                       {/* Metrics Grid */}
                       <div className="grid grid-cols-4 gap-6">
                         {/* Board Revenue */}
-                        <div className="grid h-[120px] grid-rows-[28px,28px,1fr,24px]">
+                        <div className="grid h-[130px] grid-rows-[28px,32px,1fr,24px]">
                           <div className="font-medium text-gray-700 leading-none pt-1">Board Revenue</div>
-                          <div className="font-semibold text-gray-900 text-lg leading-none pt-1 min-w-[80px]">
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3 min-w-[80px]">
                             ${participant.boardRevenue.toLocaleString()}
                           </div>
                           <div className="self-end">
@@ -112,9 +112,9 @@ export default function LeaderboardPage() {
                         </div>
 
                         {/* MSP Revenue */}
-                        <div className="grid h-[120px] grid-rows-[28px,28px,1fr,24px]">
+                        <div className="grid h-[130px] grid-rows-[28px,32px,1fr,24px]">
                           <div className="font-medium text-gray-700 leading-none pt-1">MSP Revenue</div>
-                          <div className="font-semibold text-gray-900 text-lg leading-none pt-1 min-w-[80px]">
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3 min-w-[80px]">
                             ${participant.mspRevenue.toLocaleString()}
                           </div>
                           <div className="self-end">
@@ -130,9 +130,9 @@ export default function LeaderboardPage() {
                         </div>
 
                         {/* Voice Seats */}
-                        <div className="grid h-[120px] grid-rows-[28px,28px,1fr,24px]">
+                        <div className="grid h-[130px] grid-rows-[28px,32px,1fr,24px]">
                           <div className="font-medium text-gray-700 leading-none pt-1">Voice Seats</div>
-                          <div className="font-semibold text-gray-900 text-lg leading-none pt-1 min-w-[80px]">
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3 min-w-[80px]">
                             {participant.voiceSeats.toLocaleString()}
                           </div>
                           <div className="self-end">
@@ -148,9 +148,9 @@ export default function LeaderboardPage() {
                         </div>
 
                         {/* Total Deals */}
-                        <div className="grid h-[120px] grid-rows-[28px,28px,1fr,24px]">
+                        <div className="grid h-[130px] grid-rows-[28px,32px,1fr,24px]">
                           <div className="font-medium text-gray-700 leading-none pt-1">Total Deals</div>
-                          <div className="font-semibold text-gray-900 text-lg leading-none pt-1 min-w-[80px]">
+                          <div className="font-semibold text-gray-900 text-lg leading-none pt-3 min-w-[80px]">
                             {participant.totalDeals.toLocaleString()}
                           </div>
                           <div className="self-end">
