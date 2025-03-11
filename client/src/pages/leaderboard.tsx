@@ -94,82 +94,74 @@ export default function LeaderboardPage() {
                       {/* Metrics Grid */}
                       <div className="grid grid-cols-4 gap-6">
                         {/* Board Revenue */}
-                        <div>
-                          <div className="flex flex-col h-full justify-between">
-                            <div>
-                              <div className="font-medium text-gray-700 mb-1">Board Revenue</div>
-                              <div className="font-semibold text-gray-900 text-lg mb-2">
-                                ${participant.boardRevenue.toLocaleString()}
-                              </div>
-                              <Progress
-                                value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
-                                className="h-2 bg-gray-100"
-                                indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
-                              />
-                            </div>
-                            <div className="text-sm text-gray-600 mt-2">
-                              Goal: ${participant.boardRevenueGoal.toLocaleString()}
-                            </div>
+                        <div className="h-[120px] flex flex-col">
+                          <div className="font-medium text-gray-700">Board Revenue</div>
+                          <div className="font-semibold text-gray-900 text-lg mt-1">
+                            ${participant.boardRevenue.toLocaleString()}
+                          </div>
+                          <div className="mt-2">
+                            <Progress
+                              value={calculateProgress(participant.boardRevenue, participant.boardRevenueGoal)}
+                              className="h-2 bg-gray-100"
+                              indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
+                            />
+                          </div>
+                          <div className="text-sm text-gray-600 mt-auto pt-2">
+                            Goal: ${participant.boardRevenueGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* MSP Revenue */}
-                        <div>
-                          <div className="flex flex-col h-full justify-between">
-                            <div>
-                              <div className="font-medium text-gray-700 mb-1">MSP Revenue</div>
-                              <div className="font-semibold text-gray-900 text-lg mb-2">
-                                ${participant.mspRevenue.toLocaleString()}
-                              </div>
-                              <Progress
-                                value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)}
-                                className="h-2 bg-gray-100"
-                                indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
-                              />
-                            </div>
-                            <div className="text-sm text-gray-600 mt-2">
-                              Goal: ${participant.mspRevenueGoal.toLocaleString()}
-                            </div>
+                        <div className="h-[120px] flex flex-col">
+                          <div className="font-medium text-gray-700">MSP Revenue</div>
+                          <div className="font-semibold text-gray-900 text-lg mt-1">
+                            ${participant.mspRevenue.toLocaleString()}
+                          </div>
+                          <div className="mt-2">
+                            <Progress
+                              value={calculateProgress(participant.mspRevenue, participant.mspRevenueGoal)}
+                              className="h-2 bg-gray-100"
+                              indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
+                            />
+                          </div>
+                          <div className="text-sm text-gray-600 mt-auto pt-2">
+                            Goal: ${participant.mspRevenueGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* Voice Seats */}
-                        <div>
-                          <div className="flex flex-col h-full justify-between">
-                            <div>
-                              <div className="font-medium text-gray-700 mb-1">Voice Seats</div>
-                              <div className="font-semibold text-gray-900 text-lg mb-2">
-                                {participant.voiceSeats.toLocaleString()}
-                              </div>
-                              <Progress
-                                value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)}
-                                className="h-2 bg-gray-100"
-                                indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
-                              />
-                            </div>
-                            <div className="text-sm text-gray-600 mt-2">
-                              Goal: {participant.voiceSeatsGoal.toLocaleString()}
-                            </div>
+                        <div className="h-[120px] flex flex-col">
+                          <div className="font-medium text-gray-700">Voice Seats</div>
+                          <div className="font-semibold text-gray-900 text-lg mt-1">
+                            {participant.voiceSeats.toLocaleString()}
+                          </div>
+                          <div className="mt-2">
+                            <Progress
+                              value={calculateProgress(participant.voiceSeats, participant.voiceSeatsGoal)}
+                              className="h-2 bg-gray-100"
+                              indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
+                            />
+                          </div>
+                          <div className="text-sm text-gray-600 mt-auto pt-2">
+                            Goal: {participant.voiceSeatsGoal.toLocaleString()}
                           </div>
                         </div>
 
                         {/* Total Deals */}
-                        <div>
-                          <div className="flex flex-col h-full justify-between">
-                            <div>
-                              <div className="font-medium text-gray-700 mb-1">Total Deals</div>
-                              <div className="font-semibold text-gray-900 text-lg mb-2">
-                                {participant.totalDeals.toLocaleString()}
-                              </div>
-                              <Progress
-                                value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)}
-                                className="h-2 bg-gray-100"
-                                indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
-                              />
-                            </div>
-                            <div className="text-sm text-gray-600 mt-2">
-                              Goal: {participant.totalDealsGoal.toLocaleString()}
-                            </div>
+                        <div className="h-[120px] flex flex-col">
+                          <div className="font-medium text-gray-700">Total Deals</div>
+                          <div className="font-semibold text-gray-900 text-lg mt-1">
+                            {participant.totalDeals.toLocaleString()}
+                          </div>
+                          <div className="mt-2">
+                            <Progress
+                              value={calculateProgress(participant.totalDeals, participant.totalDealsGoal)}
+                              className="h-2 bg-gray-100"
+                              indicatorClassName="bg-gradient-to-r from-[#00B140] to-[#00D150] transition-all duration-700"
+                            />
+                          </div>
+                          <div className="text-sm text-gray-600 mt-auto pt-2">
+                            Goal: {participant.totalDealsGoal.toLocaleString()}
                           </div>
                         </div>
                       </div>
