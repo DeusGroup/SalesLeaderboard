@@ -58,10 +58,10 @@ export function AdminDashboard() {
       title: "",
       amount: 0,
       type: "BOARD",
-      date: new Date().toISOString(),
     },
   });
 
+  // Improve participant query typing and debugging
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/participants"],
     onSuccess: (data) => {
@@ -72,7 +72,7 @@ export function AdminDashboard() {
     }
   });
 
-  // Improve participant query typing and debugging
+  // Improve selected participant query typing and debugging
   const { data: selectedParticipant, isLoading: isLoadingParticipant } = useQuery<Participant>({
     queryKey: ["/api/participants", selectedParticipantId],
     enabled: !!selectedParticipantId,
@@ -313,7 +313,7 @@ export function AdminDashboard() {
       );
     }
 
-    const deals = selectedParticipant.dealHistory || [];
+    const deals = selectedParticipant.dealHistory;
     console.log('[Admin Dashboard] Deals to render:', deals);
 
     if (deals.length === 0) {
