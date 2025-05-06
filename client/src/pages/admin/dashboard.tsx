@@ -196,10 +196,10 @@ export function AdminDashboard() {
                   {/* Header Row */}
                   <div className="grid grid-cols-[200px,1fr,1fr,1fr,1fr] gap-8 py-2 px-4 bg-gray-50 rounded-lg font-medium text-sm">
                     <div>Name</div>
-                    <div>Board Revenue</div>
-                    <div>MSP Revenue</div>
-                    <div>Voice Seats</div>
-                    <div>Total Deals</div>
+                    <div className="pl-4">Board Revenue</div>
+                    <div className="pl-4">MSP Revenue</div>
+                    <div className="pl-4">Voice Seats</div>
+                    <div className="pl-4">Total Deals</div>
                   </div>
 
                   {participants?.map((participant) => (
@@ -218,8 +218,8 @@ export function AdminDashboard() {
                               {participant.name.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <Link href={`/admin/profile/${participant.id}`}>
-                            <a className="font-medium hover:text-primary">{participant.name}</a>
+                          <Link href={`/admin/profile/${participant.id}`} className="font-medium hover:text-primary cursor-pointer">
+                            {participant.name}
                           </Link>
                           <Button
                             variant="ghost"
