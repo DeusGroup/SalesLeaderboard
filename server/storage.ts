@@ -103,12 +103,12 @@ export class DatabaseStorage implements IStorage {
       totalDealsGoal: metrics.totalDealsGoal ?? participant.totalDealsGoal,
     };
 
-    // Score calculation with 2x multiplier for MSP Revenue
+    // Score calculation with 2x multiplier for MSP Revenue and 1000 points per deal
     const score =
       Number(updatedMetrics.boardRevenue) +
       (Number(updatedMetrics.mspRevenue) * 2) +
       (Number(updatedMetrics.voiceSeats) * 10) +
-      (Number(updatedMetrics.totalDeals) * 50);
+      (Number(updatedMetrics.totalDeals) * 1000);
 
     await db
       .update(participants)
