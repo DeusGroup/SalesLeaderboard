@@ -19,7 +19,7 @@ interface Cache {
 const leaderboardCache: Cache = {
   data: null,
   timestamp: 0,
-  ttl: 5000 // 5 seconds cache time
+  ttl: 2000 // 2 seconds cache time for faster updates
 };
 
 const multerStorage = multer.diskStorage({

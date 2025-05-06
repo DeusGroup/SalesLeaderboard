@@ -133,7 +133,8 @@ export default function LeaderboardPage() {
 
   const { data: participants, isLoading } = useQuery<Participant[]>({
     queryKey: ["/api/leaderboard"],
-    staleTime: 10000, // Consider data fresh for 10 seconds to reduce API calls
+    staleTime: 2000, // Consider data fresh for 2 seconds only
+    refetchInterval: 3000, // Refetch every 3 seconds to ensure data is current
   });
 
   return (
