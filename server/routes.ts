@@ -3,10 +3,24 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertParticipantSchema } from "@shared/schema";
+import type { Participant } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { join } from "path";
 import multer from "multer";
 import { mkdir } from "fs/promises";
+
+// Simple in-memory cache for leaderboard data
+interface Cache {
+  data: Participant[] | null;
+  timestamp: number;
+  ttl: number; // Time to live in milliseconds
+}
+
+const leaderboardCache: Cache = {
+  data: null,
+  timestamp: 0,
+  ttl: 5000 // 5 seconds cache time
+};
 
 const multerStorage = multer.diskStorage({
   destination: async function (req, file, cb) {
@@ -38,9 +52,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Public endpoint for the leaderboard
   app.get("/api/leaderboard", async (req, res) => {
     try {
+      const now = Date.now();
+      // Check if cache is valid
+      if (leaderboardCache.data && (now - leaderboardCache.timestamp < leaderboardCache.ttl)) {
+        console.log('[Leaderboard] Serving from cache');
+        return res.json(leaderboardCache.data);
+      }
+
       console.log('[Leaderboard] Fetching participants');
       const participants = await storage.getParticipantsByScore();
       console.log(`[Leaderboard] Found ${participants.length} participants`);
+      
+      // Update cache
+      leaderboardCache.data = participants;
+      leaderboardCache.timestamp = now;
+      
       res.json(participants);
     } catch (error) {
       console.error('[Leaderboard] Error:', error);
@@ -93,6 +119,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[Admin] Creating participant:', req.body);
       const participantData = insertParticipantSchema.parse(req.body);
       const participant = await storage.createParticipant(participantData);
+      
+      // Invalidate leaderboard cache when a new participant is created
+      leaderboardCache.data = null;
+      
       console.log('[Admin] Participant created:', participant);
       res.status(201).json(participant);
     } catch (error) {
@@ -121,6 +151,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalDealsGoal
       });
       const participant = await storage.getParticipant(parseInt(id));
+      
+      // Invalidate leaderboard cache when metrics are updated
+      leaderboardCache.data = null;
+      
       console.log('[Admin] Metrics updated:', participant);
       res.json(participant);
     } catch (error) {
@@ -151,6 +185,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatarUrl
       });
       const participant = await storage.getParticipant(parseInt(id));
+      
+      // Invalidate leaderboard cache when profile is updated (affects name display)
+      leaderboardCache.data = null;
+      
       res.json(participant);
     } catch (error) {
       res.status(400).json({
@@ -164,6 +202,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { id } = req.params;
     try {
       await storage.deleteParticipant(parseInt(id));
+      
+      // Invalidate leaderboard cache when a participant is deleted
+      leaderboardCache.data = null;
+      
       res.sendStatus(200);
     } catch (error) {
       res.status(400).json({
