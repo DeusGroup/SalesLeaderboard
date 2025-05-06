@@ -44,7 +44,10 @@ export function UserProfile() {
       return res.json();
     },
     onSuccess: () => {
+      // Invalidate both admin and public leaderboard data
       queryClient.invalidateQueries({ queryKey: ["/api/participants", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
       setIsEditDialogOpen(false);
       toast({
         title: "Success",
@@ -66,6 +69,9 @@ export function UserProfile() {
       await apiRequest("DELETE", `/api/participants/${id}`);
     },
     onSuccess: () => {
+      // Invalidate both admin and public leaderboard data
+      queryClient.invalidateQueries({ queryKey: ["/api/participants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
       toast({
         title: "Success",
         description: "Participant deleted successfully",
